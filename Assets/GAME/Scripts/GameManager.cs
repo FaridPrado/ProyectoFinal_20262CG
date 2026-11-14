@@ -26,6 +26,9 @@ public class GameManager : MonoBehaviour
     public int vidaMaxima = 100;
     public int vidaActual = 100;
 
+    [Header("Personaje")]
+    public string personajeSeleccionado = "";
+
     [Header("Progreso")]
     public string escenaActual = "00_Menu";
     public string puntoControl = "inicio";
