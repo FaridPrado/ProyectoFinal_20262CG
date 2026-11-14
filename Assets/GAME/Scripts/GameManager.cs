@@ -1,16 +1,3 @@
-// Responsabilidad (enunciado 5.1): estado global persistente, cambio de escenas,
-// victoria, derrota y coordinacion del guardado/carga del JSON.
-//
-// Version sin eventos ni corrutinas (no explicados en clase):
-//  - Los controladores de escena le AVISAN al GameManager llamando sus metodos
-//    (EscenaIniciada, AgregarObjeto, DesbloquearPuerta...).
-//  - El UIManager PREGUNTA el estado en su Update (vidaActual, jugadorMuerto,
-//    enPausa, HayMensajes...) y se actualiza solo.
-//  - La espera antes de reiniciar tras la derrota es un contador en Update.
-//
-// Mantiene los mismos nombres que ya usa PlayerHealth (Instance, RecibirDanio,
-// Curar, vidaActual), asi que ese script sigue funcionando sin cambios.
-
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;

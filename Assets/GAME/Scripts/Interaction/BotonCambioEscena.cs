@@ -1,14 +1,3 @@
-// Boton fisico de la escena: el jugador se acerca, aparece el aviso
-// "Presiona E" y al presionar E se carga la escena siguiente.
-//
-// Uso: ponerlo en un objeto con un Collider marcado como "Is Trigger"
-// (la zona donde el jugador puede usar el boton). El jugador debe tener
-// el tag "Player".
-//
-// Igual que el resto del proyecto: sin eventos ni corrutinas. El cambio
-// de escena lo hace el GameManager, para que el tiempo vuelva a correr
-// y la siguiente escena guarde su punto de control al iniciar.
-
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -22,7 +11,7 @@ public class BotonCambioEscena : MonoBehaviour
     public GameObject avisoInteraccion;   // texto "Presiona E para continuar"
 
     [Header("Efecto al presionar (opcional)")]
-    public Renderer luzBoton;             // se pone verde al usarlo
+    public Renderer luzBoton;             // se pone verde al usarnlo
     public Color colorActivado = Color.green;
 
     private bool jugadorCerca;
