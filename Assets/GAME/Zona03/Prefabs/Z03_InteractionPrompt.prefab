@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 8355839881185764192}
   - component: {fileID: 7376019589209225986}
   m_Layer: 0
-  m_Name: Z03_InteractionPrompt
+  m_Name: Interaction prompt
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -89,7 +89,7 @@ GameObject:
   - component: {fileID: 3382774744519079188}
   - component: {fileID: 1252448977097598965}
   m_Layer: 0
-  m_Name: Texto_Ayuda
+  m_Name: Texto ayuda
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -169,7 +169,7 @@ GameObject:
   - component: {fileID: 8782904351036682059}
   - component: {fileID: 4241694634174797515}
   m_Layer: 0
-  m_Name: Barra_Ayuda
+  m_Name: Barra ayuda
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

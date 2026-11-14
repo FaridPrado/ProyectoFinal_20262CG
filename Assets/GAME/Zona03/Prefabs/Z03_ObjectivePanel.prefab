@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 2911148158996772330}
   - component: {fileID: 2338291380662336287}
   m_Layer: 0
-  m_Name: Texto_Objetivo
+  m_Name: Texto objetivo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -93,7 +93,7 @@ GameObject:
   - component: {fileID: 1780136608335233074}
   - component: {fileID: 4322853578483347368}
   m_Layer: 0
-  m_Name: Encabezado_Objetivo
+  m_Name: Encabezado objetivo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -172,7 +172,7 @@ GameObject:
   - component: {fileID: 5562569053289851990}
   - component: {fileID: 4580011264389425055}
   m_Layer: 0
-  m_Name: Z03_ObjectivePanel
+  m_Name: Objective panel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -250,7 +250,7 @@ GameObject:
   - component: {fileID: 4560193904520938654}
   - component: {fileID: 6913082854946936013}
   m_Layer: 0
-  m_Name: Acento_Objetivo
+  m_Name: Acento objetivo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

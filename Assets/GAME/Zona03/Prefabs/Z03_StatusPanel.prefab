@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 1918605434281917455}
   - component: {fileID: 7007782759693666095}
   m_Layer: 0
-  m_Name: Z03_StatusPanel
+  m_Name: Status panel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -90,7 +90,7 @@ GameObject:
   - component: {fileID: 6537879653409419962}
   - component: {fileID: 5361354980051837658}
   m_Layer: 0
-  m_Name: Acento_Estado
+  m_Name: Acento estado
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -165,7 +165,7 @@ GameObject:
   - component: {fileID: 3580523039473235407}
   - component: {fileID: 8833560456406294398}
   m_Layer: 0
-  m_Name: Texto_Estado
+  m_Name: Texto estado
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -244,7 +244,7 @@ GameObject:
   - component: {fileID: 5045520107125863163}
   - component: {fileID: 8442715281414087570}
   m_Layer: 0
-  m_Name: Texto_Estado_Titulo
+  m_Name: Texto estado titulo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

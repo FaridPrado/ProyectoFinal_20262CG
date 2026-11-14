@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 5125684001159661996}
   - component: {fileID: 7763948845039337163}
   m_Layer: 0
-  m_Name: Acento_Titulo
+  m_Name: Acento titulo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -166,7 +166,7 @@ GameObject:
   - component: {fileID: 3559352314307920860}
   - component: {fileID: 4150719745620026708}
   m_Layer: 0
-  m_Name: Texto_Estado
+  m_Name: Texto estado
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -245,7 +245,7 @@ GameObject:
   - component: {fileID: 7988201563201564449}
   - component: {fileID: 5780911527355903981}
   m_Layer: 0
-  m_Name: Acento_Objetivo
+  m_Name: Acento objetivo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -320,7 +320,7 @@ GameObject:
   - component: {fileID: 6623120090617418772}
   - component: {fileID: 4423248911512831551}
   m_Layer: 0
-  m_Name: Etiqueta_Ubicacion
+  m_Name: Etiqueta ubicacion
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -399,7 +399,7 @@ GameObject:
   - component: {fileID: 9053554852325571581}
   - component: {fileID: 8313331990692199232}
   m_Layer: 0
-  m_Name: Texto_Estado_Titulo
+  m_Name: Texto estado titulo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -480,7 +480,7 @@ GameObject:
   - component: {fileID: 4145538578857180501}
   - component: {fileID: 3572913235345231624}
   m_Layer: 0
-  m_Name: Z03_HUD_Completo
+  m_Name: Interfaz del jugador
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -601,7 +601,7 @@ GameObject:
   - component: {fileID: 4293003418127208081}
   - component: {fileID: 1051176946878745201}
   m_Layer: 0
-  m_Name: Panel_Titulo
+  m_Name: Panel titulo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -679,7 +679,7 @@ GameObject:
   - component: {fileID: 7008621587416267530}
   - component: {fileID: 1119522750501147223}
   m_Layer: 0
-  m_Name: Panel_Estado
+  m_Name: Panel estado
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -757,7 +757,7 @@ GameObject:
   - component: {fileID: 7248382950893920049}
   - component: {fileID: 1253634248640329751}
   m_Layer: 0
-  m_Name: Texto_Objetivo
+  m_Name: Texto objetivo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -838,7 +838,7 @@ GameObject:
   - component: {fileID: 4455346596478589302}
   - component: {fileID: 6592794761942351553}
   m_Layer: 0
-  m_Name: Hora_Local
+  m_Name: Hora local
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -916,8 +916,9 @@ GameObject:
   - component: {fileID: 3477460051046503842}
   - component: {fileID: 6048046014718686063}
   - component: {fileID: 6322111600869455953}
+  - component: {fileID: 6011380249021500001}
   m_Layer: 0
-  m_Name: Panel_Ayuda
+  m_Name: Panel de ayuda
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -966,7 +967,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 0.024, g: 0.055, b: 0.075, a: 0.83}
-  m_RaycastTarget: 0
+  m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -994,7 +995,7 @@ GameObject:
   - component: {fileID: 8918750816250268940}
   - component: {fileID: 5221807687866868420}
   m_Layer: 0
-  m_Name: Encabezado_Objetivo
+  m_Name: Encabezado objetivo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1073,7 +1074,7 @@ GameObject:
   - component: {fileID: 8973946550947250795}
   - component: {fileID: 8860141523081092496}
   m_Layer: 0
-  m_Name: Panel_Objetivo
+  m_Name: Panel objetivo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1151,7 +1152,7 @@ GameObject:
   - component: {fileID: 6154975929634555064}
   - component: {fileID: 8130852711515457543}
   m_Layer: 0
-  m_Name: Acento_Estado
+  m_Name: Acento estado
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1226,7 +1227,7 @@ GameObject:
   - component: {fileID: 1900055035110976342}
   - component: {fileID: 1810209199714260818}
   m_Layer: 0
-  m_Name: Barra_Ayuda
+  m_Name: Barra ayuda
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1301,7 +1302,7 @@ GameObject:
   - component: {fileID: 2419779812822510204}
   - component: {fileID: 5956638046457427401}
   m_Layer: 0
-  m_Name: Texto_Ayuda
+  m_Name: Texto ayuda
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1367,5 +1368,48 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: "WASD MOVERSE  \u2022  RATON DERECHO MIRAR  \u2022  Q/E ALTURA  \u2022 
-    SHIFT RAPIDO  \u2022  H HUD"
+  m_Text: "WASD moverse | Raton mirar | Shift correr | E interactuar | Esc pausa"
+--- !u!114 &6011380249021500001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6620279420151469907}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
+  m_Navigation:
+    m_Mode: 0
+    m_WrapAround: 0
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.84, g: 1, b: 1, a: 1}
+    m_PressedColor: {r: 0.65, g: 0.85, b: 0.9, a: 1}
+    m_SelectedColor: {r: 0.84, g: 1, b: 1, a: 1}
+    m_DisabledColor: {r: 0.8, g: 0.8, b: 0.8, a: 0.5}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.12
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_SelectedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_SelectedTrigger: Selected
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 6322111600869455953}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls: []
