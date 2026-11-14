@@ -6,8 +6,20 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SampleScene.unity
-    guid: 99c9720ab356a0642a771bea13969a05
+    path: Assets/GAME/Scenes/00_Menu_Respaldo.unity
+    guid: 67792d5a347e4b00a7c5e796739f1a54
+  - enabled: 1
+    path: Assets/GAME/Scenes/01_Recepcion.unity
+    guid: 72bc91a6db4d0c84ca74329314721e76
+  - enabled: 1
+    path: Assets/GAME/Scenes/02_Laboratorio.unity
+    guid: fa58d356162ad7043ae804538f3509e4
+  - enabled: 1
+    path: Assets/GAME/Scenes/03_Control.unity
+    guid: fce24bcf53b1a454faf1ced3b304b149
+  - enabled: 1
+    path: Assets/GAME/Scenes/04_Servidores.unity
+    guid: 0f2a63be7c872ff4cae532a89c5f4473
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0
