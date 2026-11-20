@@ -71,7 +71,7 @@ namespace LaboratorioAbandonado.Menu {
             }
             Label(root,"EXPLORACIÓN · SISTEMAS · SUPERVIVENCIA",.74f,.15f,.95f,.25f,16,new Color(.5f,.68f,.76f));
             status=Label(root,"",.05f,.045f,.95f,.105f,18,new Color(.95f,.72f,.36f));
-            ReadSave();Show("Inicio");
+            Show("Inicio");
         }
         private RectTransform Box(string name,Transform parent,float x,float y,float x2,float y2,Color color){
             var go=new GameObject(ReadableName(name),typeof(RectTransform),typeof(Image));go.transform.SetParent(parent,false);
@@ -110,7 +110,7 @@ namespace LaboratorioAbandonado.Menu {
                     TextPage("EL PROTOCOLO SIGUE ACTIVO","Despiertas en un laboratorio aislado. El sistema central ha bloqueado los accesos y los agentes de seguridad siguen patrullando.\n\nRecupera credenciales, restablece los sistemas y utiliza lo aprendido en cada zona para avanzar. Evita a los agentes: perder toda la vida significa volver al checkpoint.");
                     Button("COMENZAR EN RECEPCIÓN →",.48f,.02f,.52f,StartNew);break;
                 case "Controles":
-                    TextPage("EXPLORA · INTERACTÚA · SOBREVIVE","WASD  ·  Desplazamiento     SHIFT  ·  Correr\nRATÓN  ·  Mirar sin mantener clic derecho\nE / CLIC IZQUIERDO  ·  Activar el objeto apuntado\nESC  ·  Pausa / cursor     R  ·  Reiniciar tras derrota\n\nAcércate a paneles y puertas. Resuelve sus requisitos, rompe la línea de visión del guardia y conserva tu vida. En el menú: flechas / Tab y Enter.");break;
+                    TextPage("EXPLORA · INTERACTÚA · SOBREVIVE","WASD  ·  Desplazamiento     SHIFT  ·  Correr\nRATÓN  ·  Mirar sin mantener clic derecho\nE  ·  Interactuar     CLIC  ·  Paneles de Control\nESC  ·  Pausa / continuar     CTRL  ·  Agacharse\n\nAcércate a paneles y puertas. Resuelve sus requisitos, rompe la línea de visión del guardia y conserva tu vida. En el menú: flechas / Tab y Enter.");break;
                 case "Créditos":
                     TextPage("PROYECTO ACADÉMICO / COMPUTACIÓN GRÁFICA","Laboratorio Abandonado · ProyectoFinal_20262CG\n\nMenú de respaldo y Zona 03: Farid Stiven Prado Hoyos.\nEscenas restantes: equipo del proyecto.\n\nMenú principal: Valeria. Recepción, jugador y guardado: Heymer. Los recursos conservan sus archivos y créditos originales.\nImplementación integrada para Unity 6 / PC.");break;
                 case "Confirmar":
