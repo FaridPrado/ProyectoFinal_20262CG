@@ -479,6 +479,7 @@ GameObject:
   - component: {fileID: 2459279301647313187}
   - component: {fileID: 4145538578857180501}
   - component: {fileID: 3572913235345231624}
+  - component: {fileID: 852100003}
   m_Layer: 0
   m_Name: Interfaz del jugador
   m_TagString: Untagged
@@ -1413,3 +1414,15 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &852100003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5027504314835830128}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 84d5942117cb6d94ea61749838361c1c, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::UIManager

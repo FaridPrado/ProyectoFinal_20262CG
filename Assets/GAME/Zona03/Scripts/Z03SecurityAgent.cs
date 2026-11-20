@@ -15,6 +15,7 @@ namespace ControlRoomZ03 {
         [SerializeField] private AudioClip sonidoAtaque;
         [SerializeField] private AudioSource fuenteAudio;
         private NavMeshAgent nav;
+        private PlayerHealth salud;
         private Transform player;
         private Vector3[] route;
         private Vector3 lastKnown;
@@ -25,7 +26,8 @@ namespace ControlRoomZ03 {
         private Light beacon;
         public Z03GuardState Estado {get;private set;}
         void Start(){
-            player=FindFirstObjectByType<Z03PlayerMovement>()?.transform;
+            salud=FindFirstObjectByType<PlayerHealth>();
+            player=salud.transform;
             var cc=GetComponent<CharacterController>();if(cc)cc.enabled=false;
             nav=GetComponent<NavMeshAgent>();if(!nav)nav=gameObject.AddComponent<NavMeshAgent>();
             nav.radius=.35f;nav.height=1.8f;nav.speed=velocidad;nav.stoppingDistance=.6f;nav.angularSpeed=220;nav.acceleration=10;
@@ -36,7 +38,7 @@ namespace ControlRoomZ03 {
             Estado=Z03GuardState.Retorno;Change(Z03GuardState.Patrulla);
         }
         void Update(){
-            if(!player || !nav || !nav.isOnNavMesh)return;
+            if(!player || !nav || !nav.isOnNavMesh || GameManager.Instance.enPausa)return;
             if(GameManager.Instance && GameManager.Instance.vidaActual<=0){nav.isStopped=true;if(animacion)animacion.SetSpeed(0);return;}
             bool sees=Visible();float distance=Vector3.Distance(transform.position,player.position);
             if(sees){lastKnown=player.position;lastSeen=Time.time;if(Estado==Z03GuardState.Patrulla || Estado==Z03GuardState.Retorno)Change(Z03GuardState.Alerta);}
@@ -52,7 +54,7 @@ namespace ControlRoomZ03 {
                 case Z03GuardState.Ataque:
                     nav.isStopped=true;Vector3 dir=player.position-transform.position;dir.y=0;if(dir.sqrMagnitude>.01f)transform.rotation=Quaternion.RotateTowards(transform.rotation,Quaternion.LookRotation(dir),220*Time.deltaTime);
                     if(!sees || distance>rangoAtaque+.3f)Change(Z03GuardState.Persecucion);
-                    else if(Time.time>=nextAttack){nextAttack=Time.time+enfriamiento;if(animacion)animacion.Attack();if(fuenteAudio&&sonidoAtaque)fuenteAudio.PlayOneShot(sonidoAtaque);GameManager.Instance?.RecibirDanio(danio);}break;
+                    else if(Time.time>=nextAttack){nextAttack=Time.time+enfriamiento;if(animacion)animacion.Attack();if(fuenteAudio&&sonidoAtaque)fuenteAudio.PlayOneShot(sonidoAtaque);salud.RecibirDanio(danio);}break;
                 case Z03GuardState.Retorno:
                     Move(route[index]);if(!nav.pathPending&&nav.remainingDistance<1)Change(Z03GuardState.Patrulla);break;
             }
@@ -66,7 +68,7 @@ namespace ControlRoomZ03 {
         bool Visible(){
             Vector3 delta=player.position+Vector3.up*.2f-(transform.position+Vector3.up*1.3f);
             if(delta.magnitude>distanciaVision || Vector3.Angle(transform.forward,delta)>anguloVision*.5f)return false;
-            if(Physics.Raycast(transform.position+Vector3.up*1.3f,delta.normalized,out RaycastHit hit,delta.magnitude,~0,QueryTriggerInteraction.Ignore))return hit.collider.GetComponentInParent<Z03PlayerMovement>();
+            if(Physics.Raycast(transform.position+Vector3.up*1.3f,delta.normalized,out RaycastHit hit,delta.magnitude,~0,QueryTriggerInteraction.Ignore))return hit.collider.GetComponentInParent<PlayerController>();
             return true;
         }
         void Move(Vector3 target){nav.isStopped=false;if(NavMesh.SamplePosition(target,out NavMeshHit hit,2,NavMesh.AllAreas))nav.SetDestination(hit.position);}

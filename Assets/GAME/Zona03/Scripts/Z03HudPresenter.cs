@@ -1,4 +1,5 @@
 using System;
+using UnityEngine.InputSystem;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -26,7 +27,7 @@ namespace ControlRoomZ03
             if(estado && nuevoEstado!=null) estado.text=nuevoEstado;
             if(objetivo && nuevoObjetivo!=null) objetivo.text=nuevoObjetivo;
             if(ayuda && nuevaAyuda!=null) ayuda.text=nuevaAyuda;
-            if(Z03Input.Down(KeyCode.H))
+            if(Keyboard.current != null && Keyboard.current.hKey.wasPressedThisFrame)
             {
                 // Ocultar textos, sin desactivar el botón de continuación.
                 if(objetivo) objetivo.enabled=!objetivo.enabled;

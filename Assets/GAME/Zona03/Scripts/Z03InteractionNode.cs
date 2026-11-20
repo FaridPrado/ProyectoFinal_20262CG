@@ -33,7 +33,7 @@ namespace ControlRoomZ03
         }
         public void Activar()
         {
-            if(accion==Z03Action.Terminal){var ui=FindFirstObjectByType<Z03Interface>();if(ui){ui.OpenTerminal();if(audioNodo && sonido)audioNodo.PlayOneShot(sonido);return;}}
+            if(accion==Z03Action.Terminal){var ui=FindFirstObjectByType<UIManager>();if(ui){ui.OpenTerminal();if(audioNodo && sonido)audioNodo.PlayOneShot(sonido);return;}}
             if(audioNodo && sonido) audioNodo.PlayOneShot(sonido);
             var control=FindFirstObjectByType<Z03ZoneGameplay>();
             if(control) control.Interactuar(accion);

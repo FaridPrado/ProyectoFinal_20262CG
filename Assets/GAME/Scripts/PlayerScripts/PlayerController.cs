@@ -102,7 +102,8 @@ public class PlayerController : MonoBehaviour
 
     private void Mirar()
     {
-        Vector2 delta = Mouse.current.delta.ReadValue() * sensibilidad;
+        Vector2 delta = Mouse.current.delta.ReadValue() * sensibilidad * PlayerPrefs.GetFloat("LA.Sensitivity", 1f);
+        if (PlayerPrefs.GetInt("LA.InvertY", 0) == 1) delta.y = -delta.y;
 
         // El cuerpo gira a los lados y solo la camara mira arriba y abajo.
         // Asi WASD siempre se mueve hacia donde mira el jugador
