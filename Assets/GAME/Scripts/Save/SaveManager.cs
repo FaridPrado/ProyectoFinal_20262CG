@@ -11,9 +11,50 @@ public static class SaveManager
     private static string RutaGuardada => Path.Combine(Application.persistentDataPath, ARCHIVO_GUARDADO);
     private static string GuardadoAnterior => Path.Combine(Application.streamingAssetsPath, ARCHIVO_GUARDADO);
 
+    [System.Serializable]
+    private class CheckpointZona03
+    {
+        public string escena = "";
+        public int vida = 0;
+        public bool vigilancia = false, energia = false, terminal = false;
+        public List<string> inventario = null;
+        public List<string> objetivos = null;
+    }
+
+    private static DatosPartida LeerCheckpointZona03()
+    {
+        string ruta = Path.Combine(Application.streamingAssetsPath, "Zona03_Checkpoint.json");
+        if (!File.Exists(ruta)) return null;
+        try
+        {
+            var zona = JsonUtility.FromJson<CheckpointZona03>(File.ReadAllText(ruta));
+            if (zona == null || (zona.escena != "03_Control" && zona.escena != "03_Control_Demo")
+                || zona.vida <= 0 || zona.inventario == null || zona.objetivos == null) return null;
+            // El archivo distribuido con vida completa y sin progreso es la plantilla inicial.
+            if (zona.vida == 100 && !zona.vigilancia && !zona.energia && !zona.terminal
+                && zona.inventario.Count == 0 && zona.objetivos.Count == 0) return null;
+
+            var datos = new DatosPartida { escenaActual = "03_Control", puntoControl = "zona03",
+                vidaActual = Mathf.Clamp(zona.vida, 1, 100), inventario = zona.inventario, objetivosCompletados = zona.objetivos };
+            if (zona.vigilancia && !datos.objetivosCompletados.Contains("z03_vigilancia")) datos.objetivosCompletados.Add("z03_vigilancia");
+            if (zona.energia && !datos.objetivosCompletados.Contains("z03_energia")) datos.objetivosCompletados.Add("z03_energia");
+            if (zona.terminal || datos.objetivosCompletados.Contains("z03_control_restaurado"))
+            {
+                if (!datos.objetivosCompletados.Contains("z03_control_restaurado")) datos.objetivosCompletados.Add("z03_control_restaurado");
+                datos.puertas.Add(new EstadoPuerta { codigo = "puerta_control_servidores", desbloqueada = true });
+            }
+            return datos;
+        }
+        catch (System.Exception error)
+        {
+            Debug.LogWarning("No se pudo leer el checkpoint anterior: " + error.Message);
+            return null;
+        }
+    }
+
     public static bool ExisteGuardado()
     {
-        return File.Exists(RutaGuardada) || File.Exists(GuardadoAnterior);
+        return File.Exists(RutaGuardada) || File.Exists(GuardadoAnterior) || LeerCheckpointZona03() != null;
     }
 
     public static void Guardar(DatosPartida datos)
@@ -29,7 +70,9 @@ public static class SaveManager
 
     public static DatosPartida CargarGuardado()
     {
-        return Leer(File.Exists(RutaGuardada) ? RutaGuardada : GuardadoAnterior);
+        if (File.Exists(RutaGuardada)) return Leer(RutaGuardada);
+        if (File.Exists(GuardadoAnterior)) return Leer(GuardadoAnterior);
+        return LeerCheckpointZona03() ?? CargarNuevaPartida();
     }
 
     public static DatosPartida CargarNuevaPartida()
