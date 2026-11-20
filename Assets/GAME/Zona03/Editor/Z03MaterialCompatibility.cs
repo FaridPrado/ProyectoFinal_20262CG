@@ -89,6 +89,12 @@ namespace ControlRoomZ03.EditorTools
                     floats[pair.FindPropertyRelative("first").stringValue] = pair.FindPropertyRelative("second").floatValue;
                 }
                 string source = textures.TryGetValue("_BaseMap", out Texture baseMap) && baseMap ? "_BaseMap" : "_MainTex";
+                int originalQueue = saved.FindProperty("m_CustomRenderQueue").intValue;
+                floats.TryGetValue("_Mode", out float standardMode);
+                bool transparent = particle || material.GetTag("RenderType", false) == "Transparent"
+                    || (floats.TryGetValue("_Surface", out float surface) && surface == 1)
+                    || standardMode == 2 || standardMode == 3;
+                bool cutout = standardMode == 1 || (floats.TryGetValue("_AlphaClip", out float clip) && clip == 1);
                 material.shader = shader;
                 material.shaderKeywords = new string[0];
                 foreach (var pair in textures)
@@ -122,12 +128,24 @@ namespace ControlRoomZ03.EditorTools
                     if (colors.TryGetValue("_EmissionColor", out Color emission) && emission.maxColorComponent > 0)
                         material.EnableKeyword("_EMISSION");
                 }
-                if (particle)
+                if (urp)
                 {
-                    material.EnableKeyword(urp ? "_SURFACE_TYPE_TRANSPARENT" : "_ALPHABLEND_ON");
-                    material.SetOverrideTag("RenderType", "Transparent");
-                    material.renderQueue = (int)RenderQueue.Transparent;
+                    material.SetFloat("_Surface", transparent ? 1 : 0);
+                    material.SetFloat("_AlphaClip", cutout ? 1 : 0);
+                    BaseShaderGUI.SetupMaterialBlendMode(material);
                 }
+                else if (transparent || cutout)
+                {
+                    material.SetFloat("_Mode", transparent ? 2 : 1);
+                    material.SetFloat("_SrcBlend", (float)(transparent ? BlendMode.SrcAlpha : BlendMode.One));
+                    material.SetFloat("_DstBlend", (float)(transparent ? BlendMode.OneMinusSrcAlpha : BlendMode.Zero));
+                    material.SetFloat("_ZWrite", transparent ? 0 : 1);
+                    material.EnableKeyword(transparent ? "_ALPHABLEND_ON" : "_ALPHATEST_ON");
+                    material.SetOverrideTag("RenderType", transparent ? "Transparent" : "TransparentCutout");
+                    material.renderQueue = (int)(transparent ? RenderQueue.Transparent : RenderQueue.AlphaTest);
+                }
+                if (originalQueue >= 0)
+                    material.renderQueue = originalQueue;
                 EditorUtility.SetDirty(material);
                 AssetDatabase.SaveAssetIfDirty(material);
             }
