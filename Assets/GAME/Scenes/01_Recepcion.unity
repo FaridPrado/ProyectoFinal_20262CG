@@ -3692,9 +3692,35 @@ PrefabInstance:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
+  - {fileID: 852100004}
   - {fileID: 1369554282}
   - {fileID: 2100543116}
   - {fileID: 181397542}
   - {fileID: 3732362061730183864}
   - {fileID: 469988084}
   - {fileID: 1206171743}
+--- !u!1001 &852100004
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 353694904031772808, guid: 98742e037f323559885a22ceadd7092d, type: 3}
+      propertyPath: m_Text
+      value: 01 / RECEPCIÓN
+      objectReference: {fileID: 0}
+    - target: {fileID: 4423248911512831551, guid: 98742e037f323559885a22ceadd7092d, type: 3}
+      propertyPath: m_Text
+      value: LABORATORIO ABANDONADO
+      objectReference: {fileID: 0}
+    - target: {fileID: 5221807687866868420, guid: 98742e037f323559885a22ceadd7092d, type: 3}
+      propertyPath: m_Text
+      value: OBJETIVO ACTUAL
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 98742e037f323559885a22ceadd7092d, type: 3}

@@ -7,6 +7,8 @@ public class BotonCambioEscena : MonoBehaviour
     [Header("Destino")]
     public string escenaDestino = "02_Laboratorio";
 
+    public string objetoAlSalir;
+
     [Header("Aviso en pantalla (opcional)")]
     public GameObject avisoInteraccion;   // texto "Presiona E para continuar"
 
@@ -71,6 +73,7 @@ public class BotonCambioEscena : MonoBehaviour
 
         if (GameManager.Instance != null)
         {
+            if (!string.IsNullOrEmpty(objetoAlSalir)) GameManager.Instance.AgregarObjeto(objetoAlSalir);
             GameManager.Instance.CompletarObjetivo("salir_" + gameObject.scene.name);
             GameManager.Instance.CambiarEscena(escenaDestino);
         }
