@@ -1,14 +1,4 @@
-// Responsabilidad (enunciado 5.3): leer y escribir el JSON en StreamingAssets
-// y reconstruir las estructuras de datos a partir del contenido leido.
-//
-// Es una clase static (no MonoBehaviour) porque no necesita estar en ningun
-// GameObject: el GameManager la llama directamente con SaveManager.Guardar(...).
-//
-// Archivos que usa, ambos en Assets/StreamingAssets:
-//   nueva_partida.json -> estado inicial. Solo se LEE al pulsar "Nueva partida".
-//   partida.json       -> el guardado. Se ESCRIBE en cada punto de control y se
-//                         LEE al pulsar "Continuar" o al morir.
-
+// Datos iniciales empaquetados y progreso por usuario en PC.
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
@@ -18,59 +8,47 @@ public static class SaveManager
     private const string ARCHIVO_GUARDADO = "partida.json";
     private const string ARCHIVO_NUEVA_PARTIDA = "nueva_partida.json";
 
-    // Application.streamingAssetsPath apunta a Assets/StreamingAssets en el editor
-    // y a <Juego>_Data/StreamingAssets en el ejecutable de PC
-    private static string Ruta(string archivo)
-    {
-        return Path.Combine(Application.streamingAssetsPath, archivo);
-    }
+    private static string RutaGuardada => Path.Combine(Application.persistentDataPath, ARCHIVO_GUARDADO);
+    private static string GuardadoAnterior => Path.Combine(Application.streamingAssetsPath, ARCHIVO_GUARDADO);
 
     public static bool ExisteGuardado()
     {
-        return File.Exists(Ruta(ARCHIVO_GUARDADO));
+        return File.Exists(RutaGuardada) || File.Exists(GuardadoAnterior);
     }
-
-    // ---------- Escritura y lectura ----------
 
     public static void Guardar(DatosPartida datos)
     {
-        // Por si la carpeta no existe (por ejemplo, en un build recien hecho)
-        Directory.CreateDirectory(Application.streamingAssetsPath);
-
-        // true = JSON con sangria, para poder mostrarlo legible en la sustentacion
-        string json = JsonUtility.ToJson(datos, true);
-        File.WriteAllText(Ruta(ARCHIVO_GUARDADO), json);
+        Directory.CreateDirectory(Application.persistentDataPath);
+        string temporal = RutaGuardada + ".tmp";
+        File.WriteAllText(temporal, JsonUtility.ToJson(datos, true));
+        if (File.Exists(RutaGuardada))
+            File.Replace(temporal, RutaGuardada, null);
+        else
+            File.Move(temporal, RutaGuardada);
     }
 
     public static DatosPartida CargarGuardado()
     {
-        return Leer(ARCHIVO_GUARDADO);
+        return Leer(File.Exists(RutaGuardada) ? RutaGuardada : GuardadoAnterior);
     }
 
     public static DatosPartida CargarNuevaPartida()
     {
-        return Leer(ARCHIVO_NUEVA_PARTIDA);
+        return Leer(Path.Combine(Application.streamingAssetsPath, ARCHIVO_NUEVA_PARTIDA));
     }
 
-    private static DatosPartida Leer(string archivo)
+    private static DatosPartida Leer(string ruta)
     {
-        string ruta = Ruta(archivo);
-
-        if (!File.Exists(ruta))
+        if (!File.Exists(ruta)) return new DatosPartida();
+        try
         {
-            Debug.LogWarning("No se encontro " + ruta + ", se usan los valores por defecto");
+            return JsonUtility.FromJson<DatosPartida>(File.ReadAllText(ruta)) ?? new DatosPartida();
+        }
+        catch (System.Exception error)
+        {
+            Debug.LogWarning("No se pudo leer la partida en " + ruta + ": " + error.Message);
             return new DatosPartida();
         }
-
-        DatosPartida datos = JsonUtility.FromJson<DatosPartida>(File.ReadAllText(ruta));
-
-        // FromJson devuelve null si el archivo esta vacio
-        if (datos == null)
-        {
-            return new DatosPartida();
-        }
-
-        return datos;
     }
 
     // ---------- Reconstruccion de estructuras (JSON -> estructura) ----------

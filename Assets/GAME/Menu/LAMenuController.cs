@@ -1,5 +1,3 @@
-using System;
-using System.IO;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -21,7 +19,6 @@ namespace LaboratorioAbandonado.Menu {
             return text.Length==0?"Objeto":char.ToUpperInvariant(text[0])+text.Substring(1).ToLowerInvariant();
         }
         private AudioSource audioUI;
-        [SerializeField] private string firstScene="01_Recepcion";
         private Font font;
         private RectTransform content;
         private Text status;
@@ -30,24 +27,17 @@ namespace LaboratorioAbandonado.Menu {
         private string page="Inicio";
         private bool loading;
         private bool confirmNew;
-        private SaveData saved;
+        private bool hayGuardado;
         private float savedVolume;
-        private const string SaveName="Zona03_Checkpoint.json";
         private static readonly Color Ink=new Color(.035f,.065f,.09f);
         private static readonly Color Cyan=new Color(.25f,.85f,.91f);
         private static readonly Color White=new Color(.85f,.93f,.97f);
-        [Serializable] private sealed class SaveData {
-            public string escena;
-            public int vida;
-            public bool vigilancia,energia,terminal;
-            public List<string> inventario;
-            public List<string> objetivos;
-        }
         private void Start() {
             Time.timeScale=1;Cursor.lockState=CursorLockMode.None;Cursor.visible=true;
             audioUI=gameObject.AddComponent<AudioSource>();audioUI.clip=ambiente;audioUI.loop=true;audioUI.playOnAwake=false;audioUI.spatialBlend=0;if(ambiente)audioUI.Play();
             savedVolume=PlayerPrefs.GetFloat("LA.Volume",.7f);AudioListener.volume=savedVolume;
             if(!GameManager.Instance)new GameObject("GameManager").AddComponent<GameManager>();
+            GameManager.Instance.MenuIniciado();
             font=Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             var canvas=FindFirstObjectByType<Canvas>();
             if(!canvas && canvasPrefab)canvas=Instantiate(canvasPrefab).GetComponent<Canvas>();
@@ -107,24 +97,24 @@ namespace LaboratorioAbandonado.Menu {
             page=next;Clear();
             switch(page){
                 case "Inicio":
-                    history.Clear();ReadSave();
-                    Button("NUEVA PARTIDA",0,.80f,.48f,()=>{confirmNew=saved!=null;Navigate(confirmNew?"Confirmar":"Introducción");});
-                    Button("CONTINUAR",.52f,.80f,.48f,Continue,saved!=null);
+                    history.Clear();hayGuardado=GameManager.Instance.HayPartidaGuardada();
+                    Button("NUEVA PARTIDA",0,.80f,.48f,()=>{confirmNew=hayGuardado;Navigate(confirmNew?"Confirmar":"Introducción");});
+                    Button("CONTINUAR",.52f,.80f,.48f,Continue,hayGuardado);
                     Button("INTRODUCCIÓN",0,.60f,.48f,()=>{confirmNew=false;Navigate("Introducción");});
                     Button("MECÁNICAS Y CONTROLES",.52f,.60f,.48f,()=>Navigate("Controles"));
                     Button("AJUSTES",0,.40f,.48f,()=>Navigate("Ajustes"));
                     Button("CRÉDITOS",.52f,.40f,.48f,()=>Navigate("Créditos"));
                     Button("SALIR",0,.20f,.48f,()=>Navigate("Salir"));
-                    Label(content,saved!=null?"Checkpoint disponible · "+saved.escena:"Sin checkpoint guardado",0,0,1,.12f,18,new Color(.5f,.68f,.76f));break;
+                    Label(content,hayGuardado?"Partida guardada disponible":"Sin checkpoint guardado",0,0,1,.12f,18,new Color(.5f,.68f,.76f));break;
                 case "Introducción":
                     TextPage("EL PROTOCOLO SIGUE ACTIVO","Despiertas en un laboratorio aislado. El sistema central ha bloqueado los accesos y los agentes de seguridad siguen patrullando.\n\nRecupera credenciales, restablece los sistemas y utiliza lo aprendido en cada zona para avanzar. Evita a los agentes: perder toda la vida significa volver al checkpoint.");
                     Button("COMENZAR EN RECEPCIÓN →",.48f,.02f,.52f,StartNew);break;
                 case "Controles":
                     TextPage("EXPLORA · INTERACTÚA · SOBREVIVE","WASD  ·  Desplazamiento     SHIFT  ·  Correr\nRATÓN  ·  Mirar sin mantener clic derecho\nE / CLIC IZQUIERDO  ·  Activar el objeto apuntado\nESC  ·  Pausa / cursor     R  ·  Reiniciar tras derrota\n\nAcércate a paneles y puertas. Resuelve sus requisitos, rompe la línea de visión del guardia y conserva tu vida. En el menú: flechas / Tab y Enter.");break;
                 case "Créditos":
-                    TextPage("PROYECTO ACADÉMICO / COMPUTACIÓN GRÁFICA","Laboratorio Abandonado · ProyectoFinal_20262CG\n\nMenú y Zona 03: Farid Stiven Prado Hoyos.\nEscenas restantes: equipo del proyecto.\n\nEntorno y FirstPersonPlayer: SciFi Warehouse Kit adjunto. Los recursos conservan sus archivos y créditos originales.\nImplementación integrada para Unity 6 / PC.");break;
+                    TextPage("PROYECTO ACADÉMICO / COMPUTACIÓN GRÁFICA","Laboratorio Abandonado · ProyectoFinal_20262CG\n\nMenú de respaldo y Zona 03: Farid Stiven Prado Hoyos.\nEscenas restantes: equipo del proyecto.\n\nMenú principal: Valeria. Recepción, jugador y guardado: Heymer. Los recursos conservan sus archivos y créditos originales.\nImplementación integrada para Unity 6 / PC.");break;
                 case "Confirmar":
-                    TextPage("NUEVA PARTIDA","Se reiniciarán la vida, el inventario y los objetivos de la sesión. El checkpoint local de Zona 03 se sustituirá al guardar de nuevo.\n\n¿Comenzar desde Recepción?");
+                    TextPage("NUEVA PARTIDA","Se reiniciarán la vida, el inventario y los objetivos de la sesión. El checkpoint de la partida se sustituirá al guardar de nuevo.\n\n¿Comenzar desde Recepción?");
                     Button("SÍ, COMENZAR",.48f,.02f,.52f,()=>{confirmNew=false;Show("Introducción");});break;
                 case "Salir":
                     TextPage("SALIR DEL LABORATORIO","¿Quieres cerrar el juego? Solo se conservará el progreso guardado en el último checkpoint.");
@@ -150,25 +140,14 @@ namespace LaboratorioAbandonado.Menu {
             var slider=r.gameObject.AddComponent<Slider>();slider.fillRect=fill;slider.handleRect=handle;slider.targetGraphic=handle.GetComponent<Image>();slider.minValue=min;slider.maxValue=max;slider.SetValueWithoutNotify(value);
             slider.onValueChanged.AddListener(v=>{label.text=title+"  "+v.ToString("0.0");change(v);});controls.Add(r.gameObject);
         }
-        private string SavePath {get{return Path.Combine(Application.streamingAssetsPath,SaveName);}}
-        private void ReadSave(){
-            saved=null;
-            try{if(!File.Exists(SavePath))return;var cp=JsonUtility.FromJson<SaveData>(File.ReadAllText(SavePath));
-                if(cp!=null && cp.escena=="03_Control_Demo")cp.escena="03_Control";
-                if(cp!=null && cp.vida>0 && cp.vida<=10000 && cp.escena=="03_Control" && cp.inventario!=null && cp.objetivos!=null)saved=cp;
-            }catch(Exception ex){Debug.LogWarning("No se pudo leer el checkpoint: "+ex.Message);}
-        }
-        private bool Ready(string scene){if(Application.CanStreamedLevelBeLoaded(scene))return true;status.text="Falta "+scene+" en Scene List. Añádela en Build Profiles > Scene List.";return false;}
         private void StartNew(){
-            if(!Ready(firstScene))return;
-            if(confirmNew){Navigate("Confirmar");return;}
-            var gm=GameManager.Instance;gm.vidaActual=gm.vidaMaxima;gm.inventario.Clear();gm.objetivosCompletados.Clear();Load(firstScene);
+            loading=true;
+            GameManager.Instance.NuevaPartida();
         }
         private void Continue(){
-            ReadSave();if(saved==null){Show("Inicio");status.text="No hay un checkpoint válido.";return;}if(!Ready(saved.escena))return;
-            var gm=GameManager.Instance;gm.vidaActual=Mathf.Clamp(saved.vida,1,gm.vidaMaxima);gm.inventario=new List<string>(saved.inventario);gm.objetivosCompletados=new List<string>(saved.objetivos);Load(saved.escena);
+            loading=true;
+            GameManager.Instance.ContinuarPartida();
         }
-        private void Load(string scene){loading=true;status.text="Cargando "+scene+"…";PlayerPrefs.Save();Time.timeScale=1;GameManager.Instance.CambiarEscena(scene);}
         private void Quit(){PlayerPrefs.Save();
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying=false;

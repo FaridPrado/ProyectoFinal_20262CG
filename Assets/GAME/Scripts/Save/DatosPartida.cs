@@ -14,6 +14,8 @@ public class DatosPartida
     public string escenaActual = "01_Recepcion";
     public string puntoControl = "inicio";
 
+    public string personajeSeleccionado;
+
     // Vida del jugador
     public int vidaMaxima = 100;
     public int vidaActual = 100;

@@ -141,6 +141,9 @@ public class GameManager : MonoBehaviour
     // Lo llama el script del menu en su Start
     public void MenuIniciado()
     {
+        enPausa = false;
+        jugadorMuerto = false;
+        Time.timeScale = 1f;
         escenaActual = escenaMenu;
         enPartida = false;
         Cursor.lockState = CursorLockMode.None;
@@ -152,7 +155,9 @@ public class GameManager : MonoBehaviour
     // Lo llama el boton "Nueva partida" del menu
     public void NuevaPartida()
     {
+        string personaje = personajeSeleccionado;
         AplicarDatos(SaveManager.CargarNuevaPartida());
+        personajeSeleccionado = personaje;
         cargandoDesdeGuardado = false;
         CambiarEscena(escenaActual);
     }
@@ -184,6 +189,7 @@ public class GameManager : MonoBehaviour
         puntoControl = nombrePunto;
 
         DatosPartida datos = new DatosPartida();
+        datos.personajeSeleccionado = personajeSeleccionado;
         datos.escenaActual = escenaActual;
         datos.puntoControl = puntoControl;
         datos.vidaMaxima = vidaMaxima;
@@ -204,6 +210,7 @@ public class GameManager : MonoBehaviour
     // y reconstruye la cola, la pila y el diccionario
     private void AplicarDatos(DatosPartida datos)
     {
+        personajeSeleccionado = string.IsNullOrEmpty(datos.personajeSeleccionado) ? "Survivalist" : datos.personajeSeleccionado;
         escenaActual = datos.escenaActual;
         puntoControl = datos.puntoControl;
         vidaMaxima = datos.vidaMaxima;
