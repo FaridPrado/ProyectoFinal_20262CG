@@ -65,6 +65,7 @@ public class GameManager : MonoBehaviour
         // el nuevo se destruye y se conserva el original con su estado
         if (Instance != null && Instance != this)
         {
+            gameObject.SetActive(false);
             Destroy(gameObject);
             return;
         }
