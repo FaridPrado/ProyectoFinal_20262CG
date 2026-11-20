@@ -1,0 +1,24 @@
+{
+    "escenaActual": "01_Recepcion",
+    "puntoControl": "inicio",
+    "vidaMaxima": 100,
+    "vidaActual": 100,
+    "inventario": [],
+    "objetivosCompletados": [],
+    "puertas": [
+        { "codigo": "puerta_recepcion_laboratorio", "desbloqueada": false },
+        { "codigo": "puerta_laboratorio_control", "desbloqueada": false },
+        { "codigo": "puerta_control_servidores", "desbloqueada": false },
+        { "codigo": "salida_principal", "desbloqueada": false }
+    ],
+    "mensajesPendientes": [
+        "PROTOCOLO DE CONTENCION ACTIVADO. Puertas bloqueadas.",
+        "Usa WASD para moverte y el mouse para mirar.",
+        "Shift para correr: hace ruido y atrae a los agentes.",
+        "Ctrl para agacharte y esconderte.",
+        "Clic izquierdo para interactuar con objetos."
+    ],
+    "historialAccesos": [],
+    "tiempoJugado": 0,
+    "muertes": 0
+}

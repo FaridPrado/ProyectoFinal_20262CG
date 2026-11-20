@@ -2,15 +2,10 @@ using UnityEngine;
 
 public class Zona01Controller : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    private void Start()
     {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        // Pone enPartida en true (sin eso no funciona la pausa), bloquea el cursor
+        // y guarda el punto de control de entrada en partida.json
+        GameManager.Instance.EscenaIniciada();
     }
 }
