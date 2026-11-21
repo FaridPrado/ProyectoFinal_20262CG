@@ -57,7 +57,7 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        if (Keyboard.current == null || Mouse.current == null)
+        if (Keyboard.current == null)
         {
             return;
         }
@@ -70,12 +70,13 @@ public class PlayerController : MonoBehaviour
 
         if (EstaInactivo())
         {
+            EstaCorriendo = false;
             NivelRuido = 0f;
             ActualizarAnimator(0f);
             return;
         }
 
-        Mirar();
+        if (Mouse.current != null) Mirar();
         Agacharse();
         Moverse();
         ActualizarCamara();
@@ -175,7 +176,7 @@ public class PlayerController : MonoBehaviour
         }
 
         bool moviendose = direccion.sqrMagnitude > 0.01f;
-        EstaCorriendo = moviendose && !EstaAgachado && teclado.leftShiftKey.isPressed;
+        EstaCorriendo = moviendose && !EstaAgachado && teclado.shiftKey.isPressed;
 
         float velocidad = velocidadCaminar;
 
