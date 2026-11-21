@@ -573,7 +573,6 @@ GameObject:
   - component: {fileID: 1410000003}
   - component: {fileID: 1410000002}
   - component: {fileID: 1410000001}
-  - component: {fileID: 852100005}
   m_Layer: 0
   m_Name: Baranda izquierda
   m_TagString: Untagged
@@ -686,7 +685,6 @@ GameObject:
   - component: {fileID: 1410000013}
   - component: {fileID: 1410000012}
   - component: {fileID: 1410000011}
-  - component: {fileID: 852100005}
   m_Layer: 0
   m_Name: Baranda derecha
   m_TagString: Untagged
@@ -799,7 +797,6 @@ GameObject:
   - component: {fileID: 1410000023}
   - component: {fileID: 1410000022}
   - component: {fileID: 1410000021}
-  - component: {fileID: 852100005}
   m_Layer: 0
   m_Name: Baranda del fondo
   m_TagString: Untagged
@@ -912,7 +909,6 @@ GameObject:
   - component: {fileID: 1410000033}
   - component: {fileID: 1410000032}
   - component: {fileID: 1410000031}
-  - component: {fileID: 852100005}
   m_Layer: 0
   m_Name: Baranda de entrada
   m_TagString: Untagged
@@ -1025,7 +1021,6 @@ GameObject:
   - component: {fileID: 1410000043}
   - component: {fileID: 1410000042}
   - component: {fileID: 1410000041}
-  - component: {fileID: 852100005}
   m_Layer: 0
   m_Name: Soporte del lector
   m_TagString: Untagged
