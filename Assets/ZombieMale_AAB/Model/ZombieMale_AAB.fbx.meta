@@ -3,12 +3,42 @@ guid: 1dd9c954362f1eb4a86dcc2c3013fd91
 ModelImporter:
   serializedVersion: 21300
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ZombieMale_Body_MAT_V1
+    second: {fileID: 2100000, guid: a28c6bc6a958c174dab0d75148d58c03, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ZombieMale_Head_V1_MAT
+    second: {fileID: 2100000, guid: 53bac12df1b897d4a8c3703713e8aa60, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ZombieMale_Teeth_MAT_V1
+    second: {fileID: 2100000, guid: 53bac12df1b897d4a8c3703713e8aa60, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ZombieMale_LowerBody_MAT_V1
+    second: {fileID: 2100000, guid: f9cbf863d29f7524ea2a530092898beb, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ZombieMale_Shirt_MAT_V1
+    second: {fileID: 2100000, guid: f2f48ab58d320434780b05574a2ec390, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Zombie_Eyes_MAT_V1
+    second: {fileID: 2100000, guid: a1af946b944038b4e9d0cacbffb1d16e, type: 2}
   materials:
     materialImportMode: 1
     materialName: 1
     materialSearch: 1
-    materialLocation: 0
+    materialLocation: 1
   animations:
     legacyGenerateAnimations: 4
     bakeSimulation: 0
