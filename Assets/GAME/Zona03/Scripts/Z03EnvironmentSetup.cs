@@ -21,7 +21,10 @@ namespace ControlRoomZ03 {
             Physics.SyncTransforms();
             var sources=new List<NavMeshBuildSource>();
             foreach(var c in FindObjectsByType<Collider>(FindObjectsSortMode.None)) {
-                if(!c.enabled || c.isTrigger || c.gameObject.scene!=gameObject.scene || c.GetComponentInParent<PlayerController>() || c.GetComponentInParent<Z03SecurityAgent>() || c.GetComponentInParent<Z03InteractionNode>())continue;
+                if(!c.enabled || c.isTrigger || c.gameObject.scene!=gameObject.scene || c.GetComponentInParent<PlayerController>() || c.GetComponentInParent<Z03SecurityAgent>())continue;
+                // Las hojas de la salida se apartan al autorizar el acceso.
+                var nodo = c.GetComponentInParent<Z03InteractionNode>();
+                if (nodo && nodo.accion == Z03Action.Salida) continue;
                 if (!TryCreateNavigationSource(c, out NavMeshBuildSource source)) continue;
                 sources.Add(source);
             }
