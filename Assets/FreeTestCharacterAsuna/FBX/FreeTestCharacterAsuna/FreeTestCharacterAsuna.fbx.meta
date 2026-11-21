@@ -12,18 +12,8 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: AsunaEyelahes
-    second: {fileID: 2100000, guid: f9a77bbe0f42d294e983260def424bdd, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
       name: AsunaHead
     second: {fileID: 2100000, guid: 5066dd69df84db44da459b3593ac034d, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: CharacterEyes
-    second: {fileID: 2100000, guid: 8c80f04cdf8d18b4d933d1e704d630ff, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
@@ -49,11 +39,6 @@ ModelImporter:
       assembly: UnityEngine.CoreModule
       name: Eyeball
     second: {fileID: 2100000, guid: e9fc7f17e0968bc4db31d4938e78e0b1, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: FemaleHair1
-    second: {fileID: 2100000, guid: 4432b93352277714caa001b074ab9503, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
