@@ -103,6 +103,7 @@ public class GameManager : MonoBehaviour
     public void CambiarEscena(string nombreEscena)
     {
         // Si se cambia de escena desde la pausa, el tiempo debe volver a correr
+        enPartida = false;
         Time.timeScale = 1f;
         SceneManager.LoadScene(nombreEscena);
     }
@@ -230,7 +231,7 @@ public class GameManager : MonoBehaviour
 
     public void RecibirDanio(int cantidad)
     {
-        if (jugadorMuerto)
+        if (!enPartida || jugadorMuerto)
         {
             return;
         }
