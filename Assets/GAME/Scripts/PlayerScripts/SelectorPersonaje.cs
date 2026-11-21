@@ -1,12 +1,6 @@
 // Muestra el personaje elegido en el menu (Asuna o Survivalist) y oculta el otro.
 //
-// Los dos modelos estan dentro del prefab Player como hijos. El menu de
-// Valeria guarda el nombre en GameManager.personajeSeleccionado y aqui solo
-// se lee ese nombre: el movimiento sigue siendo el mismo PlayerController,
-// asi que funciona igual con cualquiera de los dos.
-//
-// Le pasa al PlayerController el Animator del modelo visible para que lo
-// anime con los parametros "Velocidad" y "Agachado".
+
 
 using UnityEngine;
 

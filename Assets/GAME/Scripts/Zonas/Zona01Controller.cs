@@ -3,8 +3,8 @@ using UnityEngine;
 
 // Controlador de la Zona 1 (Recepcion). Logica local de la escena:
 // el jugador debe recoger ciertos objetos para habilitar la salida.
-// Mientras falten, la sala esta en emergencia (luces rojas y sirena).
-// Al tenerlos todos se restablece la energia, se cumple el objetivo
+// Mientras falten la sala esta en emergencia (luces rojas y sirena).
+// Cuando se  tenga todo se restablece la energia y se cumple el objetivo
 // y se guarda un punto de control. El estado global lo guarda el GameManager.
 public class Zona01Controller : MonoBehaviour
 {
