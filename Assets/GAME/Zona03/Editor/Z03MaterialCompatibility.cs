@@ -88,7 +88,9 @@ namespace ControlRoomZ03.EditorTools
                     var pair = array.GetArrayElementAtIndex(i);
                     floats[pair.FindPropertyRelative("first").stringValue] = pair.FindPropertyRelative("second").floatValue;
                 }
-                string source = textures.TryGetValue("_BaseMap", out Texture baseMap) && baseMap ? "_BaseMap" : "_MainTex";
+                string source = urp ? "_MainTex" : "_BaseMap";
+                if (!textures.TryGetValue(source, out Texture mainTexture) || !mainTexture)
+                    source = urp ? "_BaseMap" : "_MainTex";
                 int originalQueue = saved.FindProperty("m_CustomRenderQueue").intValue;
                 floats.TryGetValue("_Mode", out float standardMode);
                 bool transparent = particle || material.GetTag("RenderType", false) == "Transparent"
@@ -113,8 +115,10 @@ namespace ControlRoomZ03.EditorTools
                     material.SetTextureScale(destination, scales[source]);
                     material.SetTextureOffset(destination, offsets[source]);
                 }
-                Color tint = colors.TryGetValue("_BaseColor", out Color baseColor) ? baseColor
-                    : colors.TryGetValue("_Color", out Color color) ? color : Color.white;
+                string sourceTint = urp ? "_Color" : "_BaseColor";
+                if (!colors.TryGetValue(sourceTint, out Color tint) &&
+                    !colors.TryGetValue(urp ? "_BaseColor" : "_Color", out tint))
+                    tint = Color.white;
                 string tintKey = urp ? "_BaseColor" : "_Color";
                 if (material.HasProperty(tintKey)) material.SetColor(tintKey, screen ? Color.white : tint);
                 string smoothKey = urp ? "_Smoothness" : "_Glossiness";
@@ -132,6 +136,11 @@ namespace ControlRoomZ03.EditorTools
                 {
                     material.SetFloat("_Surface", transparent ? 1 : 0);
                     material.SetFloat("_AlphaClip", cutout ? 1 : 0);
+                    if (originalQueue >= 0 && material.HasProperty("_QueueOffset"))
+                    {
+                        var baseQueue = transparent ? RenderQueue.Transparent : cutout ? RenderQueue.AlphaTest : RenderQueue.Geometry;
+                        material.SetFloat("_QueueOffset", originalQueue - (int)baseQueue);
+                    }
                     BaseShaderGUI.SetupMaterialBlendMode(material);
                 }
                 else if (transparent || cutout)
