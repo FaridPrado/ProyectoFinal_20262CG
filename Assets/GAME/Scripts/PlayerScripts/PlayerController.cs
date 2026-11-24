@@ -26,6 +26,8 @@ public class PlayerController : MonoBehaviour
 
     private CharacterController controlador;
     private Vector3 posicionCamaraDePie;
+    private Camera camaraTerceraPersona;
+    private Vector3 desplazamientoCamara;
     private float rotacionVertical;
     private float velocidadY;
     private bool controlBloqueado;
@@ -48,6 +50,9 @@ public class PlayerController : MonoBehaviour
         // Se recuerda donde esta la camara de pie para calcular desde ahi
         // la posicion agachado y la sacudida
         posicionCamaraDePie = camara.localPosition;
+        camaraTerceraPersona = camara.GetComponentInChildren<Camera>();
+        if (camaraTerceraPersona && camaraTerceraPersona.transform.parent == camara)
+            desplazamientoCamara = camaraTerceraPersona.transform.localPosition;
     }
 
     private void Start()
@@ -57,7 +62,7 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        if (Keyboard.current == null || Mouse.current == null)
+        if (Keyboard.current == null)
         {
             return;
         }
@@ -70,12 +75,13 @@ public class PlayerController : MonoBehaviour
 
         if (EstaInactivo())
         {
+            EstaCorriendo = false;
             NivelRuido = 0f;
             ActualizarAnimator(0f);
             return;
         }
 
-        Mirar();
+        if (Mouse.current != null) Mirar();
         Agacharse();
         Moverse();
         ActualizarCamara();
@@ -102,7 +108,8 @@ public class PlayerController : MonoBehaviour
 
     private void Mirar()
     {
-        Vector2 delta = Mouse.current.delta.ReadValue() * sensibilidad;
+        Vector2 delta = Mouse.current.delta.ReadValue() * sensibilidad * PlayerPrefs.GetFloat("LA.Sensitivity", 1f);
+        if (PlayerPrefs.GetInt("LA.InvertY", 0) == 1) delta.y = -delta.y;
 
         // El cuerpo gira a los lados y solo la camara mira arriba y abajo.
         // Asi WASD siempre se mueve hacia donde mira el jugador
@@ -174,7 +181,7 @@ public class PlayerController : MonoBehaviour
         }
 
         bool moviendose = direccion.sqrMagnitude > 0.01f;
-        EstaCorriendo = moviendose && !EstaAgachado && teclado.leftShiftKey.isPressed;
+        EstaCorriendo = moviendose && !EstaAgachado && teclado.shiftKey.isPressed;
 
         float velocidad = velocidadCaminar;
 
@@ -252,6 +259,22 @@ public class PlayerController : MonoBehaviour
 
         animator.SetFloat("Velocidad", velocidad);
         animator.SetBool("Agachado", EstaAgachado);
+    }
+
+    private void LateUpdate()
+    {
+        if (desplazamientoCamara == Vector3.zero) return;
+
+        Vector3 recorrido = camara.TransformVector(desplazamientoCamara);
+        float distancia = recorrido.magnitude;
+        Vector3 direccion = recorrido / distancia;
+        float medioAlto = camaraTerceraPersona.nearClipPlane * Mathf.Tan(camaraTerceraPersona.fieldOfView * Mathf.Deg2Rad * 0.5f);
+        float radio = medioAlto * Mathf.Sqrt(1f + camaraTerceraPersona.aspect * camaraTerceraPersona.aspect);
+        if (Physics.SphereCast(camara.position, radio, direccion, out var golpe, distancia,
+                Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
+            distancia = Mathf.Max(0f, golpe.distance - 0.02f);
+
+        camaraTerceraPersona.transform.position = camara.position + direccion * distancia;
     }
 
     // ---------- Metodos publicos para otros scripts ----------

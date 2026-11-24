@@ -1,0 +1,9 @@
+{
+    "escena": "03_Control",
+    "vida": 100,
+    "vigilancia": false,
+    "energia": false,
+    "terminal": false,
+    "inventario": [],
+    "objetivos": []
+}

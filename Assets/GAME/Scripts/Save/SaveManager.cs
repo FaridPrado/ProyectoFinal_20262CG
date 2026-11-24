@@ -1,14 +1,4 @@
-// Responsabilidad (enunciado 5.3): leer y escribir el JSON en StreamingAssets
-// y reconstruir las estructuras de datos a partir del contenido leido.
-//
-// Es una clase static (no MonoBehaviour) porque no necesita estar en ningun
-// GameObject: el GameManager la llama directamente con SaveManager.Guardar(...).
-//
-// Archivos que usa, ambos en Assets/StreamingAssets:
-//   nueva_partida.json -> estado inicial. Solo se LEE al pulsar "Nueva partida".
-//   partida.json       -> el guardado. Se ESCRIBE en cada punto de control y se
-//                         LEE al pulsar "Continuar" o al morir.
-
+// Datos iniciales empaquetados y progreso por usuario en PC.
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
@@ -18,59 +8,90 @@ public static class SaveManager
     private const string ARCHIVO_GUARDADO = "partida.json";
     private const string ARCHIVO_NUEVA_PARTIDA = "nueva_partida.json";
 
-    // Application.streamingAssetsPath apunta a Assets/StreamingAssets en el editor
-    // y a <Juego>_Data/StreamingAssets en el ejecutable de PC
-    private static string Ruta(string archivo)
+    private static string RutaGuardada => Path.Combine(Application.persistentDataPath, ARCHIVO_GUARDADO);
+    private static string GuardadoAnterior => Path.Combine(Application.streamingAssetsPath, ARCHIVO_GUARDADO);
+
+    [System.Serializable]
+    private class CheckpointZona03
     {
-        return Path.Combine(Application.streamingAssetsPath, archivo);
+        public string escena = "";
+        public int vida = 0;
+        public bool vigilancia = false, energia = false, terminal = false;
+        public List<string> inventario = null;
+        public List<string> objetivos = null;
+    }
+
+    private static DatosPartida LeerCheckpointZona03()
+    {
+        string ruta = Path.Combine(Application.streamingAssetsPath, "Zona03_Checkpoint.json");
+        if (!File.Exists(ruta)) return null;
+        try
+        {
+            var zona = JsonUtility.FromJson<CheckpointZona03>(File.ReadAllText(ruta));
+            if (zona == null || (zona.escena != "03_Control" && zona.escena != "03_Control_Demo")
+                || zona.vida <= 0 || zona.inventario == null || zona.objetivos == null) return null;
+            // El archivo distribuido con vida completa y sin progreso es la plantilla inicial.
+            if (zona.vida == 100 && !zona.vigilancia && !zona.energia && !zona.terminal
+                && zona.inventario.Count == 0 && zona.objetivos.Count == 0) return null;
+
+            var datos = new DatosPartida { escenaActual = "03_Control", puntoControl = "zona03",
+                vidaActual = Mathf.Clamp(zona.vida, 1, 100), inventario = zona.inventario, objetivosCompletados = zona.objetivos };
+            if (zona.vigilancia && !datos.objetivosCompletados.Contains("z03_vigilancia")) datos.objetivosCompletados.Add("z03_vigilancia");
+            if (zona.energia && !datos.objetivosCompletados.Contains("z03_energia")) datos.objetivosCompletados.Add("z03_energia");
+            if (zona.terminal || datos.objetivosCompletados.Contains("z03_control_restaurado"))
+            {
+                if (!datos.objetivosCompletados.Contains("z03_control_restaurado")) datos.objetivosCompletados.Add("z03_control_restaurado");
+                datos.puertas.Add(new EstadoPuerta { codigo = "puerta_control_servidores", desbloqueada = true });
+            }
+            return datos;
+        }
+        catch (System.Exception error)
+        {
+            Debug.LogWarning("No se pudo leer el checkpoint anterior: " + error.Message);
+            return null;
+        }
     }
 
     public static bool ExisteGuardado()
     {
-        return File.Exists(Ruta(ARCHIVO_GUARDADO));
+        return File.Exists(RutaGuardada) || File.Exists(GuardadoAnterior) || LeerCheckpointZona03() != null;
     }
-
-    // ---------- Escritura y lectura ----------
 
     public static void Guardar(DatosPartida datos)
     {
-        // Por si la carpeta no existe (por ejemplo, en un build recien hecho)
-        Directory.CreateDirectory(Application.streamingAssetsPath);
-
-        // true = JSON con sangria, para poder mostrarlo legible en la sustentacion
-        string json = JsonUtility.ToJson(datos, true);
-        File.WriteAllText(Ruta(ARCHIVO_GUARDADO), json);
+        Directory.CreateDirectory(Application.persistentDataPath);
+        string temporal = RutaGuardada + ".tmp";
+        File.WriteAllText(temporal, JsonUtility.ToJson(datos, true));
+        if (File.Exists(RutaGuardada))
+            File.Replace(temporal, RutaGuardada, null);
+        else
+            File.Move(temporal, RutaGuardada);
     }
 
     public static DatosPartida CargarGuardado()
     {
-        return Leer(ARCHIVO_GUARDADO);
+        if (File.Exists(RutaGuardada)) return Leer(RutaGuardada);
+        if (File.Exists(GuardadoAnterior)) return Leer(GuardadoAnterior);
+        return LeerCheckpointZona03() ?? CargarNuevaPartida();
     }
 
     public static DatosPartida CargarNuevaPartida()
     {
-        return Leer(ARCHIVO_NUEVA_PARTIDA);
+        return Leer(Path.Combine(Application.streamingAssetsPath, ARCHIVO_NUEVA_PARTIDA));
     }
 
-    private static DatosPartida Leer(string archivo)
+    private static DatosPartida Leer(string ruta)
     {
-        string ruta = Ruta(archivo);
-
-        if (!File.Exists(ruta))
+        if (!File.Exists(ruta)) return new DatosPartida();
+        try
         {
-            Debug.LogWarning("No se encontro " + ruta + ", se usan los valores por defecto");
+            return JsonUtility.FromJson<DatosPartida>(File.ReadAllText(ruta)) ?? new DatosPartida();
+        }
+        catch (System.Exception error)
+        {
+            Debug.LogWarning("No se pudo leer la partida en " + ruta + ": " + error.Message);
             return new DatosPartida();
         }
-
-        DatosPartida datos = JsonUtility.FromJson<DatosPartida>(File.ReadAllText(ruta));
-
-        // FromJson devuelve null si el archivo esta vacio
-        if (datos == null)
-        {
-            return new DatosPartida();
-        }
-
-        return datos;
     }
 
     // ---------- Reconstruccion de estructuras (JSON -> estructura) ----------

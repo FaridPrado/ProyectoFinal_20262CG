@@ -120,3 +120,5 @@ InitTestScene*.unity*
 # Archivos del Mac y de VS Code
 .DS_Store
 .vscode/
+/.vscode/
+/ProjectSettings/SceneTemplateSettings.json

@@ -7,13 +7,7 @@ public class BotonCambioEscena : MonoBehaviour
     [Header("Destino")]
     public string escenaDestino = "02_Laboratorio";
 
-    [Header("Requisito (opcional)")]
-    // Si no esta vacio, el boton solo funciona cuando ese objetivo ya se cumplio.
-    // En Recepcion es "recepcion_completa": haber recogido todos los objetos
-    public string objetivoRequerido = "";
-    public AudioSource fuenteAudio;
-    public AudioClip sonidoBloqueado;
-    public AudioClip sonidoActivado;
+    public string objetoAlSalir;
 
     [Header("Aviso en pantalla (opcional)")]
     public GameObject avisoInteraccion;   // texto "Presiona E para continuar"
@@ -57,31 +51,13 @@ public class BotonCambioEscena : MonoBehaviour
 
     private void Presionar()
     {
-        // Salida bloqueada: avisa, suena y no cambia de escena
-        if (!RequisitoCumplido())
-        {
-            if (GameManager.Instance != null)
-            {
-                GameManager.Instance.EncolarMensaje("Salida bloqueada: aun te faltan objetos.");
-            }
-
-            if (fuenteAudio != null && sonidoBloqueado != null)
-            {
-                fuenteAudio.PlayOneShot(sonidoBloqueado);
-            }
-
-            return;
-        }
-
         // Evita cargar la escena dos veces si se presiona E muy rapido
         usado = true;
 
-        if (fuenteAudio != null && sonidoActivado != null)
+        if (avisoInteraccion != null)
         {
-            fuenteAudio.PlayOneShot(sonidoActivado);
+            avisoInteraccion.SetActive(false);
         }
-
-        MostrarAviso(false);
 
         if (luzBoton != null)
         {
@@ -97,6 +73,7 @@ public class BotonCambioEscena : MonoBehaviour
 
         if (GameManager.Instance != null)
         {
+            if (!string.IsNullOrEmpty(objetoAlSalir)) GameManager.Instance.AgregarObjeto(objetoAlSalir);
             GameManager.Instance.CompletarObjetivo("salir_" + gameObject.scene.name);
             GameManager.Instance.CambiarEscena(escenaDestino);
         }
@@ -107,45 +84,15 @@ public class BotonCambioEscena : MonoBehaviour
         }
     }
 
-    private bool RequisitoCumplido()
-    {
-        if (string.IsNullOrEmpty(objetivoRequerido) || GameManager.Instance == null)
-        {
-            return true;
-        }
-
-        return GameManager.Instance.ObjetivoCompletado(objetivoRequerido);
-    }
-
-    // Usa el texto propio si se le asigno uno; si no, el aviso del HUD (UIManager)
-    private void MostrarAviso(bool mostrar)
-    {
-        if (avisoInteraccion != null)
-        {
-            avisoInteraccion.SetActive(mostrar);
-        }
-        else if (UIManager.Instance != null)
-        {
-            if (mostrar)
-            {
-                UIManager.Instance.MostrarAviso("E: usar el boton de salida");
-            }
-            else
-            {
-                UIManager.Instance.OcultarAviso();
-            }
-        }
-    }
-
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player"))
         {
             jugadorCerca = true;
 
-            if (!usado)
+            if (avisoInteraccion != null && !usado)
             {
-                MostrarAviso(true);
+                avisoInteraccion.SetActive(true);
             }
         }
     }
@@ -155,7 +102,11 @@ public class BotonCambioEscena : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             jugadorCerca = false;
-            MostrarAviso(false);
+
+            if (avisoInteraccion != null)
+            {
+                avisoInteraccion.SetActive(false);
+            }
         }
     }
 }
