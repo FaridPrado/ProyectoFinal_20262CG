@@ -92,8 +92,6 @@ public sealed class UIManager : MonoBehaviour
             security.fieldOfView = 75;
             security.enabled = false;
             feed.texture = video;
-            Sign("ARCHIVO OESTE", new Vector3(-10, 2.55f, -11));
-            Sign("RESERVA ESTE", new Vector3(10, 2.55f, -11));
             Sign("VIGILANCIA", new Vector3(-15, 2.8f, 12));
             Sign("ENERGÍA", new Vector3(15, 2.8f, 12));
             Sign("AUTORIZACIÓN", new Vector3(0, 2.9f, 18));
@@ -114,7 +112,7 @@ public sealed class UIManager : MonoBehaviour
         mesh.text = text;
         mesh.font = font;
         mesh.fontSize = 64;
-        mesh.characterSize = .07f;
+        mesh.characterSize = .047f;
         mesh.anchor = TextAnchor.MiddleCenter;
         mesh.color = new Color(.35f, .9f, 1);
         go.GetComponent<MeshRenderer>().sharedMaterial = font.material;
