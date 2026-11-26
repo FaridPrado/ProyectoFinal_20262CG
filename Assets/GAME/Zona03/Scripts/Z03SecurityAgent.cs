@@ -46,7 +46,7 @@ namespace ControlRoomZ03
         private float stateSince;
         private float nextAttack;
         private int index;
-        private Light beacon;
+        [SerializeField] private Light beacon;
         public Z03GuardState Estado { get; private set; }
 
         void Start()
@@ -58,8 +58,6 @@ namespace ControlRoomZ03
             if (cc)
                 cc.enabled = false;
             nav = GetComponent<NavMeshAgent>();
-            if (!nav)
-                nav = gameObject.AddComponent<NavMeshAgent>();
             nav.radius = .35f;
             nav.height = 1.8f;
             nav.speed = velocidad;
@@ -85,12 +83,6 @@ namespace ControlRoomZ03
                 new Vector3(12, 0, 15),
                 new Vector3(12, 0, 3)
             };
-            var go = new GameObject("Luz de alerta");
-            go.transform.SetParent(transform, false);
-            go.transform.localPosition = Vector3.up * 1.8f;
-            beacon = go.AddComponent<Light>();
-            beacon.range = 3;
-            beacon.intensity = 2;
             Estado = Z03GuardState.Retorno;
             Change(Z03GuardState.Patrulla);
         }

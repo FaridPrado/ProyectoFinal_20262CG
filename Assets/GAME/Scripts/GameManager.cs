@@ -188,12 +188,10 @@ public class GameManager : MonoBehaviour
     // los controladores (por ejemplo, una terminal de guardado)
     public void GuardarPartida(string nombrePunto)
     {
-        puntoControl = nombrePunto;
-
         DatosPartida datos = new DatosPartida();
         datos.personajeSeleccionado = personajeSeleccionado;
         datos.escenaActual = escenaActual;
-        datos.puntoControl = puntoControl;
+        datos.puntoControl = nombrePunto;
         datos.vidaMaxima = vidaMaxima;
         datos.vidaActual = vidaActual;
         datos.inventario = new List<string>(inventario);
@@ -204,8 +202,13 @@ public class GameManager : MonoBehaviour
         datos.tiempoJugado = tiempoJugado;
         datos.muertes = muertes;
 
-        SaveManager.Guardar(datos);
-        EncolarMensaje("Progreso guardado.");
+        if (SaveManager.Guardar(datos))
+        {
+            puntoControl = nombrePunto;
+            EncolarMensaje("Progreso guardado.");
+        }
+        else
+            EncolarMensaje("No se pudo guardar. Comprueba los permisos de la carpeta del juego.");
     }
 
     // Pasa el contenido leido del JSON al estado del juego
