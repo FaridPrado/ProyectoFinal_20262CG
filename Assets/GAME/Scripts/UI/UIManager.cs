@@ -4,41 +4,98 @@ using UnityEngine.UI;
 using ControlRoomZ03;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
+using TMPro;
 
 public sealed class UIManager : MonoBehaviour
 {
-    public static UIManager Instance { get; private set; }
+    // ---------- HUD de Recepcion (prefab CanvasJuego) ----------
+    // Hay un Canvas por escena (instancia del prefab), asi que no usa DontDestroyOnLoad
+    public static UIManager Instance;
+
+    [Header("Textos del HUD (CanvasJuego)")]
+    public TMP_Text textoObjetivo;
+    public TMP_Text textoVida;
+    public TMP_Text textoMensaje;
+    public TMP_Text textoAviso;
+
+    [Header("Mensajes")]
+    public float segundosPorMensaje = 3f;
+
+    private float tiempoMensaje;
 
     private void Awake()
     {
         Instance = this;
+
+        if (textoMensaje != null)
+        {
+            textoMensaje.text = "";
+        }
+
+        OcultarAviso();
+    }
+
+    private void Update()
+    {
+        if (GameManager.Instance == null)
+        {
+            return;
+        }
+
+        if (textoVida != null)
+        {
+            textoVida.text = "Vida: " + GameManager.Instance.vidaActual + " / " + GameManager.Instance.vidaMaxima;
+        }
+
+        // Mientras se ve un mensaje se descuenta su tiempo.
+        // unscaledDeltaTime: los mensajes siguen avanzando aunque el juego este en pausa
+        if (tiempoMensaje > 0f)
+        {
+            tiempoMensaje -= Time.unscaledDeltaTime;
+
+            if (tiempoMensaje <= 0f && textoMensaje != null)
+            {
+                textoMensaje.text = "";
+            }
+
+            return;
+        }
+
+        // Este es el Dequeue con efecto visible: saca el mensaje mas antiguo de la cola
+        if (GameManager.Instance.HayMensajes() && textoMensaje != null)
+        {
+            textoMensaje.text = GameManager.Instance.SiguienteMensaje();
+            tiempoMensaje = segundosPorMensaje;
+        }
+    }
+
+    public void MostrarObjetivo(string texto)
+    {
+        if (textoObjetivo != null)
+        {
+            textoObjetivo.text = texto;
+        }
     }
 
     public void MostrarAviso(string texto)
     {
-        if (textoAviso == null)
-            CrearTextoAviso();
-        if (textoAviso == null)
-            return;
-        textoAviso.text = texto;
-        textoAviso.gameObject.SetActive(true);
+        if (textoAviso != null)
+        {
+            textoAviso.text = texto;
+            textoAviso.gameObject.SetActive(true);
+        }
     }
 
     public void OcultarAviso()
     {
         if (textoAviso != null)
+        {
             textoAviso.gameObject.SetActive(false);
+        }
     }
 
-    private void CrearTextoAviso()
-    {
-        if (canvas == null || font == null)
-            return;
-        textoAviso = Label("Aviso", canvas.transform, "", 22);
-        textoAviso.alignment = TextAnchor.MiddleCenter;
-        Rect(textoAviso.gameObject, new Vector2(.2f, .2f), new Vector2(.8f, .3f), Vector2.zero, Vector2.zero);
-        textoAviso.gameObject.SetActive(false);
-    }
+    // ---------- Terminal, pausa y danio (HUD de la Zona 03) ----------
+
     private static string ReadableName(string value)
     {
         string text = value.Replace("_", " ").Trim();
@@ -63,7 +120,6 @@ public sealed class UIManager : MonoBehaviour
     private bool wasPaused;
     private int lastHealth = 100;
     private float flash;
-    private Text textoAviso;
     void Start()
     {
         escena = gameObject.scene.name;
@@ -81,12 +137,14 @@ public sealed class UIManager : MonoBehaviour
             eventos.transform.SetParent(transform, false);
         }
 
-        if (!hud)
+        // En escenas con CanvasJuego (Recepcion) no hay Z03HudPresenter:
+        // ahi solo se usa el HUD de arriba
+        if (hud == null)
             return;
+
         canvas = hud.GetComponent<Canvas>();
         if (!canvas)
             return;
-
         font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         if (zone)
         {
