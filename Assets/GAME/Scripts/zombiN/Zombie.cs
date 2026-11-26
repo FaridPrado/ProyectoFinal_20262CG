@@ -15,10 +15,10 @@ public class Zombie : MonoBehaviour, IDamageable
 
     [Header("Persecución")]
     [SerializeField] private float detectionRange = 15f;
-    [SerializeField] private Transform target; // Si lo dejas vacío, busca el objeto con tag "Player"
+    [SerializeField] private Transform target; 
 
-    // Eventos para que la barra de vida (u otros scripts) se enteren
-    public event Action<float, float> OnHealthChanged; // (vidaActual, vidaMaxima)
+    
+    public event Action<float, float> OnHealthChanged; 
     public event Action OnDied;
 
     public float CurrentHealth { get; private set; }
@@ -26,11 +26,13 @@ public class Zombie : MonoBehaviour, IDamageable
     public bool IsDead { get; private set; }
 
     private NavMeshAgent agent;
+    private Animator animator;
     private float nextAttackTime;
 
     private void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
+        animator = GetComponent<Animator>();
         CurrentHealth = maxHealth;
     }
 
@@ -46,6 +48,11 @@ public class Zombie : MonoBehaviour, IDamageable
     private void Update()
     {
         if (IsDead || target == null) return;
+
+        if (!agent.isOnNavMesh) return;
+
+        // Alimenta el Blend Tree (Idle <-> Walk)
+        animator.SetFloat("Speed", agent.velocity.magnitude);
 
         float distance = Vector3.Distance(transform.position, target.position);
 
@@ -81,8 +88,7 @@ public class Zombie : MonoBehaviour, IDamageable
         if (Time.time < nextAttackTime) return;
         nextAttackTime = Time.time + attackCooldown;
 
-        // Aquí puedes disparar la animación de ataque:
-        // animator.SetTrigger("Attack");
+        animator.SetTrigger("attack");
 
         if (target.TryGetComponent(out IDamageable victim))
         {
@@ -103,10 +109,10 @@ public class Zombie : MonoBehaviour, IDamageable
     private void Die()
     {
         IsDead = true;
+        animator.SetTrigger("die");
         agent.enabled = false;
         OnDied?.Invoke();
 
-        // animator.SetTrigger("Die");
         Destroy(gameObject, 3f);
     }
 }

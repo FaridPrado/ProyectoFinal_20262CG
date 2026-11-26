@@ -2,13 +2,46 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using ControlRoomZ03;
+using TMPro;
 
 public sealed class UIManager : MonoBehaviour
 {
+    public static UIManager Instance { get; private set; }
+
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+    }
     private static string ReadableName(string value)
     {
         string text = value.Replace("_", " ").Trim();
         return text.Length == 0 ? "Objeto" : char.ToUpperInvariant(text[0]) + text.Substring(1).ToLowerInvariant();
+    }
+
+    [Header("Avisos y objetivos")]
+    [SerializeField] private GameObject panelAviso;
+    [SerializeField] private TextMeshProUGUI textoAviso;
+    [SerializeField] private TextMeshProUGUI textoObjetivo;
+
+    public void MostrarAviso(string mensaje)
+    {
+        if (textoAviso != null) textoAviso.text = mensaje;
+        if (panelAviso != null) panelAviso.SetActive(true);
+    }
+
+    public void OcultarAviso()
+    {
+        if (panelAviso != null) panelAviso.SetActive(false);
+    }
+
+    public void MostrarObjetivo(string objetivo)
+    {
+        if (textoObjetivo != null) textoObjetivo.text = objetivo;
     }
 
     [SerializeField] private GameObject panel;
@@ -42,7 +75,7 @@ public sealed class UIManager : MonoBehaviour
 
         zone = FindFirstObjectByType<Z03ZoneGameplay>();
         hud = GetComponent<Z03HudPresenter>();
-        eventos.SetActive(true);
+        if (eventos != null) eventos.SetActive(false);
         mira.SetActive(zone != null);
         if (GameManager.Instance) lastHealth = GameManager.Instance.vidaActual;
     }
