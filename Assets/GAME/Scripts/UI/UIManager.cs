@@ -2,8 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using ControlRoomZ03;
-using UnityEngine.EventSystems;
-using UnityEngine.InputSystem.UI;
 
 public sealed class UIManager : MonoBehaviour
 {
@@ -13,23 +11,22 @@ public sealed class UIManager : MonoBehaviour
         return text.Length == 0 ? "Objeto" : char.ToUpperInvariant(text[0]) + text.Substring(1).ToLowerInvariant();
     }
 
-    private Canvas canvas;
-    private GameObject panel;
-    private Text title;
-    private Text body;
+    [SerializeField] private GameObject panel;
+    [SerializeField] private Text title;
+    [SerializeField] private Text body;
     [SerializeField] private Text avisoSistema;
+    [SerializeField] private Image damage;
+    [SerializeField] private RawImage feed;
+    [SerializeField] private Camera security;
+    [SerializeField] private GameObject mira;
+    [SerializeField] private GameObject eventos;
+    [SerializeField] private Button[] opciones;
     private float finAviso;
     private bool mostrandoDerrota;
-    private Image damage;
-    private RawImage feed;
-    private Camera security;
-    private RenderTexture video;
-    private readonly List<GameObject> buttons = new List<GameObject>();
     private readonly Stack<string> pages = new Stack<string>();
     private Z03ZoneGameplay zone;
     private Z03HudPresenter hud;
     private string escena;
-    private Font font;
     private bool terminalOpen;
     private bool wasPaused;
     private int lastHealth = 100;
@@ -45,136 +42,29 @@ public sealed class UIManager : MonoBehaviour
 
         zone = FindFirstObjectByType<Z03ZoneGameplay>();
         hud = GetComponent<Z03HudPresenter>();
-        if (!FindFirstObjectByType<EventSystem>())
+        eventos.SetActive(true);
+        mira.SetActive(zone != null);
+        if (GameManager.Instance) lastHealth = GameManager.Instance.vidaActual;
+    }
+
+    private void Opcion(string label, int fila, UnityEngine.Events.UnityAction accion)
+    {
+        Button boton = opciones[fila];
+        boton.name = "Botón " + label.ToLowerInvariant();
+        boton.GetComponentInChildren<Text>(true).text = label;
+        boton.onClick.AddListener(accion);
+        boton.gameObject.SetActive(true);
+    }
+
+    private void Clear()
+    {
+        foreach (Button boton in opciones)
         {
-            var eventos = new GameObject("Eventos de la interfaz", typeof(EventSystem), typeof(InputSystemUIInputModule));
-            eventos.transform.SetParent(transform, false);
+            boton.onClick.RemoveAllListeners();
+            boton.gameObject.SetActive(false);
         }
-
-        canvas = hud.GetComponent<Canvas>();
-        if (!canvas)
-            return;
-        font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        if (zone)
-        {
-            Text cross = Label("Mira", canvas.transform, "+", 24);
-            Rect(cross.gameObject, new Vector2(.5f, .5f), new Vector2(.5f, .5f), new Vector2(-12, -12), new Vector2(12, 12));
-            cross.alignment = TextAnchor.MiddleCenter;
-            cross.raycastTarget = false;
-        }
-
-        damage = Image("Efecto de daño", canvas.transform, new Color(1, 0, 0, 0));
-        Rect(damage.gameObject, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-        damage.raycastTarget = false;
-        var background = Image("Panel de pausa y terminal", canvas.transform, new Color(.025f, .05f, .08f, .98f));
-        panel = background.gameObject;
-        Rect(panel, new Vector2(.15f, .12f), new Vector2(.85f, .88f), Vector2.zero, Vector2.zero);
-        title = Label("Título", panel.transform, "", 27);
-        Rect(title.gameObject, new Vector2(.06f, .8f), new Vector2(.94f, .96f), Vector2.zero, Vector2.zero);
-        body = Label("Contenido", panel.transform, "", 19);
-        Rect(body.gameObject, new Vector2(.06f, .42f), new Vector2(.94f, .8f), Vector2.zero, Vector2.zero);
-        panel.SetActive(false);
-        if (zone)
-        {
-            var raw = new GameObject("Monitor de seguridad", typeof(RectTransform), typeof(RawImage));
-            raw.transform.SetParent(panel.transform, false);
-            feed = raw.GetComponent<RawImage>();
-            feed.raycastTarget = false;
-            Rect(raw, new Vector2(.52f, .42f), new Vector2(.94f, .8f), Vector2.zero, Vector2.zero);
-            video = new RenderTexture(640, 360, 16);
-            video.Create();
-            var cg = new GameObject("Cámara de seguridad");
-            cg.transform.SetParent(zone.transform);
-            cg.transform.position = new Vector3(0, 7, 24);
-            cg.transform.LookAt(new Vector3(0, 0, -4));
-            security = cg.AddComponent<Camera>();
-            security.targetTexture = video;
-            security.fieldOfView = 75;
-            security.enabled = false;
-            feed.texture = video;
-            Sign("VIGILANCIA", new Vector3(-15, 2.8f, 12));
-            Sign("ENERGÍA", new Vector3(15, 2.8f, 12));
-            Sign("AUTORIZACIÓN", new Vector3(0, 2.9f, 18));
-            Sign("04 / SERVIDORES", new Vector3(0, 4.5f, 25.5f));
-            Sign("03 / SALA DE CONTROL", new Vector3(0, 3.8f, -12));
-        }
-
-        if (GameManager.Instance)
-            lastHealth = GameManager.Instance.vidaActual;
-    }
-
-    void Sign(string text, Vector3 position)
-    {
-        var go = new GameObject(ReadableName("Señal " + text));
-        go.transform.SetParent(zone.transform);
-        go.transform.position = position;
-        var mesh = go.AddComponent<TextMesh>();
-        mesh.text = text;
-        mesh.font = font;
-        mesh.fontSize = 64;
-        mesh.characterSize = .047f;
-        mesh.anchor = TextAnchor.MiddleCenter;
-        mesh.color = new Color(.35f, .9f, 1);
-        go.GetComponent<MeshRenderer>().sharedMaterial = font.material;
-    }
-
-    static void Rect(GameObject go, Vector2 min, Vector2 max, Vector2 lo, Vector2 hi)
-    {
-        var r = go.GetComponent<RectTransform>();
-        r.anchorMin = min;
-        r.anchorMax = max;
-        r.offsetMin = lo;
-        r.offsetMax = hi;
-    }
-
-    Image Image(string name, Transform parent, Color color)
-    {
-        var go = new GameObject(ReadableName(name), typeof(RectTransform), typeof(Image));
-        go.transform.SetParent(parent, false);
-        var i = go.GetComponent<Image>();
-        i.color = color;
-        return i;
-    }
-
-    Text Label(string name, Transform parent, string value, int size)
-    {
-        var go = new GameObject(ReadableName(name), typeof(RectTransform), typeof(Text));
-        go.transform.SetParent(parent, false);
-        var t = go.GetComponent<Text>();
-        t.font = font;
-        t.text = value;
-        t.fontSize = size;
-        t.color = new Color(.8f, .93f, 1);
-        t.raycastTarget = false;
-        return t;
-    }
-
-    void Button(string label, int row, UnityEngine.Events.UnityAction action)
-    {
-        var img = Image("Botón_" + label, panel.transform, new Color(.05f, .2f, .27f));
-        Rect(img.gameObject, new Vector2(.06f, .31f - row * .085f), new Vector2(.94f, .38f - row * .085f), Vector2.zero, Vector2.zero);
-        var b = img.gameObject.AddComponent<Button>();
-        b.targetGraphic = img;
-        b.onClick.AddListener(action);
-        var text = Label("Texto", img.transform, label, 18);
-        Rect(text.gameObject, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-        text.alignment = TextAnchor.MiddleCenter;
-        buttons.Add(img.gameObject);
-    }
-
-    void Clear()
-    {
-        foreach (var b in buttons)
-        {
-            b.SetActive(false);
-            Destroy(b);
-        }
-
-        buttons.Clear();
-        if (feed)
-            feed.gameObject.SetActive(false);
-        if (security)
-            security.enabled = false;
+        feed.gameObject.SetActive(false);
+        if (security) security.enabled = false;
     }
 
     public void OpenTerminal()
@@ -196,30 +86,30 @@ public sealed class UIManager : MonoBehaviour
         if (pages.Peek() == "Inicio")
         {
             body.text = "Oeste: recupera el registro y valida vigilancia.\nEste: conecta la reserva y restablece energía.\nPara salir, presenta la credencial del laboratorio.";
-            Button("Diagnóstico y cámara de seguridad", 0, () =>
+            Opcion("Diagnóstico y cámara de seguridad", 0, () =>
             {
                 pages.Push("Diagnóstico");
                 RenderTerminal();
             });
-            Button("Autorizar acceso a Servidores", 1, () =>
+            Opcion("Autorizar acceso a Servidores", 1, () =>
             {
                 Close();
                 zone.Interactuar(Z03Action.Terminal);
             });
-            Button("Cerrar terminal", 2, Close);
+            Opcion("Cerrar terminal", 2, Close);
         }
         else
         {
             body.text = zone.Diagnostico();
             feed.gameObject.SetActive(true);
             security.enabled = true;
-            Button("Atrás", 0, () =>
+            Opcion("Atrás", 0, () =>
             {
                 if (pages.Count > 1)
                     pages.Pop();
                 RenderTerminal();
             });
-            Button("Cerrar", 1, Close);
+            Opcion("Cerrar", 1, Close);
         }
     }
 
@@ -229,10 +119,10 @@ public sealed class UIManager : MonoBehaviour
         panel.SetActive(true);
         title.text = "PARTIDA EN PAUSA";
         body.text = "WASD · caminar    Shift · correr    Ctrl · agacharse\nRatón · mirar    E · interactuar    Esc · continuar";
-        Button("Continuar", 0, Close);
-        Button("Cargar último checkpoint", 1, GameManager.Instance.ReiniciarDesdeGuardado);
-        Button("Guardar y volver al menú", 2, ReturnMenu);
-        Button("Inventario y evidencias", 3, Inventario);
+        Opcion("Continuar", 0, Close);
+        Opcion("Cargar último checkpoint", 1, GameManager.Instance.ReiniciarDesdeGuardado);
+        Opcion("Guardar y volver al menú", 2, ReturnMenu);
+        Opcion("Inventario y evidencias", 3, Inventario);
     }
 
     private void Inventario()
@@ -242,7 +132,7 @@ public sealed class UIManager : MonoBehaviour
         var objetos = GameManager.Instance.inventario;
         body.text = objetos.Count == 0 ? "Todavía no has recogido objetos." :
             string.Join("\n", objetos.ConvertAll(id => ReadableName(id.Replace("z03_", ""))));
-        Button("Atrás", 0, Pause);
+        Opcion("Atrás", 0, Pause);
     }
 
     void ReturnMenu()
@@ -301,7 +191,7 @@ public sealed class UIManager : MonoBehaviour
                 panel.SetActive(true);
                 title.text = "04 / SERVIDORES";
                 body.text = "Has llegado a la sala de servidores. Fin del recorrido disponible.";
-                Button("Volver al menú principal", 0, gm.IrAlMenu);
+                Opcion("Volver al menú principal", 0, gm.IrAlMenu);
             }
 
             hud.SetObjective("Llegada a servidores");
@@ -328,18 +218,5 @@ public sealed class UIManager : MonoBehaviour
         lastHealth = hp;
         flash = Mathf.Max(0, flash - Time.unscaledDeltaTime);
         damage.color = new Color(.9f, .02f, .02f, flash * .65f);
-    }
-
-    void OnDestroy()
-    {
-        if (video)
-        {
-            if (security)
-                security.targetTexture = null;
-            if (feed)
-                feed.texture = null;
-            video.Release();
-            Destroy(video);
-        }
     }
 }

@@ -17,7 +17,7 @@ namespace ControlRoomZ03
         {
             if (!sonido) return;
             audioNodo = GetComponent<AudioSource>();
-            if (!audioNodo) audioNodo = gameObject.AddComponent<AudioSource>();
+            if (!audioNodo) return;
             audioNodo.playOnAwake = false;
             audioNodo.spatialBlend = .85f;
             audioNodo.minDistance = 1.3f;
