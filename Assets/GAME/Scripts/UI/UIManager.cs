@@ -7,6 +7,38 @@ using UnityEngine.InputSystem.UI;
 
 public sealed class UIManager : MonoBehaviour
 {
+    public static UIManager Instance { get; private set; }
+
+    private void Awake()
+    {
+        Instance = this;
+    }
+
+    public void MostrarAviso(string texto)
+    {
+        if (textoAviso == null)
+            CrearTextoAviso();
+        if (textoAviso == null)
+            return;
+        textoAviso.text = texto;
+        textoAviso.gameObject.SetActive(true);
+    }
+
+    public void OcultarAviso()
+    {
+        if (textoAviso != null)
+            textoAviso.gameObject.SetActive(false);
+    }
+
+    private void CrearTextoAviso()
+    {
+        if (canvas == null || font == null)
+            return;
+        textoAviso = Label("Aviso", canvas.transform, "", 22);
+        textoAviso.alignment = TextAnchor.MiddleCenter;
+        Rect(textoAviso.gameObject, new Vector2(.2f, .2f), new Vector2(.8f, .3f), Vector2.zero, Vector2.zero);
+        textoAviso.gameObject.SetActive(false);
+    }
     private static string ReadableName(string value)
     {
         string text = value.Replace("_", " ").Trim();
@@ -31,6 +63,7 @@ public sealed class UIManager : MonoBehaviour
     private bool wasPaused;
     private int lastHealth = 100;
     private float flash;
+    private Text textoAviso;
     void Start()
     {
         escena = gameObject.scene.name;
@@ -48,9 +81,12 @@ public sealed class UIManager : MonoBehaviour
             eventos.transform.SetParent(transform, false);
         }
 
+        if (!hud)
+            return;
         canvas = hud.GetComponent<Canvas>();
         if (!canvas)
             return;
+
         font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         if (zone)
         {

@@ -7,12 +7,14 @@ public class PlayerHealth : MonoBehaviour
     public AudioClip sonidoDanio;
     public float duracionSacudida = 0.25f;
     public float intensidadSacudida = 0.08f;
+  
 
     private PlayerController jugador;
 
     private void Awake()
     {
         jugador = GetComponent<PlayerController>();
+        
     }
 
     // El AgentController la llama una vez por ataque, respetando su cooldown
