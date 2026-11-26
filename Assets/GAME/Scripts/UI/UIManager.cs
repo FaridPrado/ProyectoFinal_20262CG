@@ -17,6 +17,9 @@ public sealed class UIManager : MonoBehaviour
     private GameObject panel;
     private Text title;
     private Text body;
+    [SerializeField] private Text avisoSistema;
+    private float finAviso;
+    private bool mostrandoDerrota;
     private Image damage;
     private RawImage feed;
     private Camera security;
@@ -89,6 +92,8 @@ public sealed class UIManager : MonoBehaviour
             security.fieldOfView = 75;
             security.enabled = false;
             feed.texture = video;
+            Sign("ARCHIVO OESTE", new Vector3(-10, 2.55f, -11));
+            Sign("RESERVA ESTE", new Vector3(10, 2.55f, -11));
             Sign("VIGILANCIA", new Vector3(-15, 2.8f, 12));
             Sign("ENERGÍA", new Vector3(15, 2.8f, 12));
             Sign("AUTORIZACIÓN", new Vector3(0, 2.9f, 18));
@@ -192,7 +197,7 @@ public sealed class UIManager : MonoBehaviour
         title.text = "TERMINAL / " + pages.Peek();
         if (pages.Peek() == "Inicio")
         {
-            body.text = "Restablece vigilancia y energía.\nLa autorización requiere la credencial del laboratorio.\nConsulta el diagnóstico y las cámaras antes de abrir la salida.";
+            body.text = "Oeste: recupera el registro y valida vigilancia.\nEste: conecta la reserva y restablece energía.\nPara salir, presenta la credencial del laboratorio.";
             Button("Diagnóstico y cámara de seguridad", 0, () =>
             {
                 pages.Push("Diagnóstico");
@@ -229,6 +234,17 @@ public sealed class UIManager : MonoBehaviour
         Button("Continuar", 0, Close);
         Button("Cargar último checkpoint", 1, GameManager.Instance.ReiniciarDesdeGuardado);
         Button("Guardar y volver al menú", 2, ReturnMenu);
+        Button("Inventario y evidencias", 3, Inventario);
+    }
+
+    private void Inventario()
+    {
+        Clear();
+        title.text = "INVENTARIO Y EVIDENCIAS";
+        var objetos = GameManager.Instance.inventario;
+        body.text = objetos.Count == 0 ? "Todavía no has recogido objetos." :
+            string.Join("\n", objetos.ConvertAll(id => ReadableName(id.Replace("z03_", ""))));
+        Button("Atrás", 0, Pause);
     }
 
     void ReturnMenu()
@@ -254,6 +270,31 @@ public sealed class UIManager : MonoBehaviour
         if (!panel)
             return;
         var gm = GameManager.Instance;
+        if (gm.jugadorMuerto)
+        {
+            if (!mostrandoDerrota)
+            {
+                mostrandoDerrota = true;
+                Clear();
+                panel.SetActive(true);
+                title.text = "SIN VIDA";
+                body.text = "Recuperando el punto de control: " + ReadableName(gm.puntoControl);
+                damage.color = new Color(.65f, .02f, .02f, .3f);
+            }
+            return;
+        }
+
+        if (avisoSistema && !gm.enPausa && Time.time >= finAviso)
+        {
+            if (gm.HayMensajes())
+            {
+                avisoSistema.text = gm.SiguienteMensaje();
+                finAviso = Time.time + 2.8f;
+            }
+            else if (avisoSistema.text.Length > 0)
+                avisoSistema.text = "";
+        }
+
         if (gm.gano)
         {
             if (!panel.activeSelf)
