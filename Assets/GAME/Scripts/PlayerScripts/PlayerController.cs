@@ -25,6 +25,8 @@ public class PlayerController : MonoBehaviour
     public float velocidadTransicion = 8f;
 
     private CharacterController controlador;
+    private float baseCapsula;
+    private readonly Collider[] contactosTecho = new Collider[8];
     private Vector3 posicionCamaraDePie;
     private Camera camaraTerceraPersona;
     private Vector3 desplazamientoCamara;
@@ -46,6 +48,7 @@ public class PlayerController : MonoBehaviour
     private void Awake()
     {
         controlador = GetComponent<CharacterController>();
+        baseCapsula = controlador.center.y - controlador.height * 0.5f;
 
         // Se recuerda donde esta la camara de pie para calcular desde ahi
         // la posicion agachado y la sacudida
@@ -122,43 +125,34 @@ public class PlayerController : MonoBehaviour
     private void Agacharse()
     {
         Keyboard teclado = Keyboard.current;
-        bool quiereAgacharse = teclado.leftCtrlKey.isPressed || teclado.cKey.isPressed;
+        bool quiereAgacharse = teclado.ctrlKey.isPressed || teclado.cKey.isPressed;
+        EstaAgachado = quiereAgacharse || (controlador.height < alturaDePie && !HayEspacioParaPararse());
 
-        if (quiereAgacharse)
-        {
-            EstaAgachado = true;
-        }
-        else if (EstaAgachado && HayEspacioParaPararse())
-        {
-            EstaAgachado = false;
-        }
+        float alturaObjetivo = EstaAgachado ? alturaAgachado : alturaDePie;
+        float altura = Mathf.MoveTowards(controlador.height, alturaObjetivo, velocidadTransicion * Time.deltaTime);
+        if (altura == controlador.height) return;
 
-        float alturaObjetivo = alturaDePie;
-
-        if (EstaAgachado)
-        {
-            alturaObjetivo = alturaAgachado;
-        }
-
-        // Lerp cambia la altura poco a poco para que no sea brusco.
-        // El centro es la mitad de la altura para que los pies sigan en el piso
-        controlador.height = Mathf.Lerp(controlador.height, alturaObjetivo, velocidadTransicion * Time.deltaTime);
-        controlador.center = new Vector3(0f, controlador.height / 2f, 0f);
+        Vector3 centro = controlador.center;
+        centro.y = baseCapsula + altura * 0.5f;
+        controlador.height = altura;
+        controlador.center = centro;
     }
 
-    // Lanza una esfera hacia arriba: si choca con algo, no hay espacio.
-    // Evita pararse debajo de una mesa o un ducto y atravesar el techo
     private bool HayEspacioParaPararse()
     {
-        float radio = controlador.radius * 0.9f;
-        Vector3 origen = transform.position + Vector3.up * (controlador.height - radio);
-        float distancia = alturaDePie - controlador.height + 0.05f;
-        RaycastHit choque;
-
-        // QueryTriggerInteraction.Ignore: las zonas trigger no cuentan como techo
-        bool hayTecho = Physics.SphereCast(origen, radio, Vector3.up, out choque, distancia, ~0, QueryTriggerInteraction.Ignore);
-
-        return !hayTecho;
+        // Comprobamos solo el volumen que ocuparía la cabeza al levantarse.
+        Vector3 centro = controlador.center;
+        centro.y = baseCapsula + controlador.height - controlador.radius;
+        Vector3 inicio = transform.TransformPoint(centro);
+        centro.y = baseCapsula + alturaDePie - controlador.radius;
+        Vector3 fin = transform.TransformPoint(centro);
+        float radio = (controlador.radius - 0.005f) * Mathf.Max(transform.lossyScale.x, transform.lossyScale.z);
+        int cantidad = Physics.OverlapCapsuleNonAlloc(inicio, fin, radio, contactosTecho, ~0, QueryTriggerInteraction.Ignore);
+        for (int i = 0; i < cantidad; i++)
+        {
+            if (!contactosTecho[i].transform.IsChildOf(transform)) return false;
+        }
+        return cantidad < contactosTecho.Length;
     }
 
     private void Moverse()

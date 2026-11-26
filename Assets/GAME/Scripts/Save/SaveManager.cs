@@ -1,4 +1,4 @@
-// Datos iniciales empaquetados y progreso por usuario en PC.
+// La plantilla y la partida se almacenan por separado en StreamingAssets.
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
@@ -8,8 +8,8 @@ public static class SaveManager
     private const string ARCHIVO_GUARDADO = "partida.json";
     private const string ARCHIVO_NUEVA_PARTIDA = "nueva_partida.json";
 
-    private static string RutaGuardada => Path.Combine(Application.persistentDataPath, ARCHIVO_GUARDADO);
-    private static string GuardadoAnterior => Path.Combine(Application.streamingAssetsPath, ARCHIVO_GUARDADO);
+    private static string RutaGuardada => Path.Combine(Application.streamingAssetsPath, ARCHIVO_GUARDADO);
+    private static string GuardadoAnterior => Path.Combine(Application.persistentDataPath, ARCHIVO_GUARDADO);
 
     [System.Serializable]
     private class CheckpointZona03
@@ -57,15 +57,24 @@ public static class SaveManager
         return File.Exists(RutaGuardada) || File.Exists(GuardadoAnterior) || LeerCheckpointZona03() != null;
     }
 
-    public static void Guardar(DatosPartida datos)
+    public static bool Guardar(DatosPartida datos)
     {
-        Directory.CreateDirectory(Application.persistentDataPath);
-        string temporal = RutaGuardada + ".tmp";
-        File.WriteAllText(temporal, JsonUtility.ToJson(datos, true));
-        if (File.Exists(RutaGuardada))
-            File.Replace(temporal, RutaGuardada, null);
-        else
-            File.Move(temporal, RutaGuardada);
+        try
+        {
+            Directory.CreateDirectory(Application.streamingAssetsPath);
+            string temporal = RutaGuardada + ".tmp";
+            File.WriteAllText(temporal, JsonUtility.ToJson(datos, true));
+            if (File.Exists(RutaGuardada))
+                File.Replace(temporal, RutaGuardada, null);
+            else
+                File.Move(temporal, RutaGuardada);
+            return true;
+        }
+        catch (System.Exception error) when (error is IOException || error is System.UnauthorizedAccessException)
+        {
+            Debug.LogWarning("No se pudo guardar en " + RutaGuardada + ": " + error.Message);
+            return false;
+        }
     }
 
     public static DatosPartida CargarGuardado()

@@ -1,174 +1,166 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 using UnityEngine.EventSystems;
-#if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.UI;
-#endif
+using UnityEngine.UI;
 
-namespace LaboratorioAbandonado.Menu {
-    // Menu module intentionally has no reference to Zona03 C# types.
-    public sealed class LAMenuController : MonoBehaviour {
-        [SerializeField] private GameObject canvasPrefab;
-        [SerializeField] private AudioClip ambiente;
+namespace LaboratorioAbandonado.Menu
+{
+    public sealed class LAMenuController : MonoBehaviour
+    {
+        [SerializeField] private GameObject[] paginas;
+        [SerializeField] private Text estado;
+        [SerializeField] private Text estadoGuardado;
+        [SerializeField] private Button continuar;
+        [SerializeField] private Slider volumen;
+        [SerializeField] private Slider sensibilidad;
+        [SerializeField] private Text etiquetaVolumen;
+        [SerializeField] private Text etiquetaSensibilidad;
+        [SerializeField] private Text etiquetaInvertir;
+        [SerializeField] private Text etiquetaPantalla;
+        [SerializeField] private AudioSource audioUI;
         [SerializeField] private AudioClip click;
-        private static string ReadableName(string value){
-            string text=value.Replace("_"," ").Trim();
-            return text.Length==0?"Objeto":char.ToUpperInvariant(text[0])+text.Substring(1).ToLowerInvariant();
-        }
-        private AudioSource audioUI;
-        private Font font;
-        private RectTransform content;
-        private Text status;
-        private readonly Stack<string> history=new Stack<string>();
-        private readonly List<GameObject> controls=new List<GameObject>();
-        private string page="Inicio";
-        private bool loading;
-        private bool confirmNew;
-        private bool hayGuardado;
-        private float savedVolume;
-        private static readonly Color Ink=new Color(.035f,.065f,.09f);
-        private static readonly Color Cyan=new Color(.25f,.85f,.91f);
-        private static readonly Color White=new Color(.85f,.93f,.97f);
-        private void Start() {
-            Time.timeScale=1;Cursor.lockState=CursorLockMode.None;Cursor.visible=true;
-            audioUI=gameObject.AddComponent<AudioSource>();audioUI.clip=ambiente;audioUI.loop=true;audioUI.playOnAwake=false;audioUI.spatialBlend=0;if(ambiente)audioUI.Play();
-            savedVolume=PlayerPrefs.GetFloat("LA.Volume",.7f);AudioListener.volume=savedVolume;
-            if(!GameManager.Instance)new GameObject("GameManager").AddComponent<GameManager>();
+
+        private readonly Stack<string> historial = new Stack<string>();
+        private Selectable[] controles;
+        private string pagina;
+        private bool cargando;
+
+        private void Start()
+        {
             GameManager.Instance.MenuIniciado();
-            font=Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            var canvas=FindFirstObjectByType<Canvas>();
-            if(!canvas && canvasPrefab)canvas=Instantiate(canvasPrefab).GetComponent<Canvas>();
-            if(!canvas){Debug.LogError("Menú: falta la referencia al prefab Canvas compartido.");return;}
-            foreach(Transform child in canvas.transform)child.gameObject.SetActive(false);
-            canvas.renderMode=RenderMode.ScreenSpaceOverlay;
-            var scaler=canvas.GetComponent<CanvasScaler>();if(!scaler)scaler=canvas.gameObject.AddComponent<CanvasScaler>();
-            scaler.uiScaleMode=CanvasScaler.ScaleMode.ScaleWithScreenSize;scaler.referenceResolution=new Vector2(1600,900);scaler.matchWidthOrHeight=.5f;
-            if(!canvas.GetComponent<GraphicRaycaster>())canvas.gameObject.AddComponent<GraphicRaycaster>();
-            if(!FindFirstObjectByType<EventSystem>()){
-                var es=new GameObject("Eventos del menú");es.AddComponent<EventSystem>();
-#if ENABLE_INPUT_SYSTEM
-                es.AddComponent<InputSystemUIInputModule>();
-#else
-                es.AddComponent<StandaloneInputModule>();
-#endif
+            AudioListener.volume = PlayerPrefs.GetFloat("LA.Volume", .7f);
+            Mostrar("Inicio");
+        }
+
+        private void Sonido()
+        {
+            if (click) audioUI.PlayOneShot(click);
+        }
+
+        private void Mostrar(string nombre)
+        {
+            pagina = nombre;
+            estado.text = "";
+            foreach (GameObject vista in paginas)
+            {
+                bool visible = vista.name == nombre;
+                vista.SetActive(visible);
+                if (visible) controles = vista.GetComponentsInChildren<Selectable>();
             }
-            RectTransform root=Box("Panel del menú",canvas.transform,0,0,1,1,Ink);
-            Box("Línea superior",root,.045f,.922f,.955f,.925f,Cyan);
-            Label(root,"LA / SISTEMA DE CONTENCIÓN · MENÚ DE RESPALDO",.045f,.94f,.70f,.98f,19,Cyan);
-            Label(root,"PROTOCOLO 03   •   PC",.75f,.94f,.955f,.98f,16,White,TextAnchor.MiddleRight);
-            Label(root,"LABORATORIO\nABANDONADO",.05f,.70f,.63f,.88f,56,White);
-            Label(root,"Recupera el control. Encuentra la salida.",.053f,.64f,.64f,.70f,21,new Color(.5f,.68f,.76f));
-            content=Box("Contenido",root,.05f,.13f,.65f,.62f,new Color(0,0,0,0));
-            Box("Separador",root,.69f,.15f,.691f,.86f,new Color(.15f,.29f,.36f));
-            Label(root,"INSTALACIÓN / RECORRIDO",.74f,.79f,.95f,.86f,20,Cyan);
-            string[] zones={"01  RECEPCIÓN","02  LABORATORIO","03  SALA DE CONTROL","04  SERVIDORES"};
-            for(int i=0;i<4;i++){
-                float y=.68f-i*.12f;Box("Indicador de zona",root,.745f,y,.752f,y+.05f,i==2?Cyan:new Color(.2f,.35f,.42f));
-                Label(root,zones[i],.77f,y-.01f,.96f,y+.06f,19,White);
+
+            if (nombre == "Inicio")
+            {
+                historial.Clear();
+                bool existe = GameManager.Instance.HayPartidaGuardada();
+                continuar.interactable = existe;
+                estadoGuardado.text = existe ? "Partida guardada disponible" : "Sin checkpoint guardado";
             }
-            Label(root,"EXPLORACIÓN · SISTEMAS · SUPERVIVENCIA",.74f,.15f,.95f,.25f,16,new Color(.5f,.68f,.76f));
-            status=Label(root,"",.05f,.045f,.95f,.105f,18,new Color(.95f,.72f,.36f));
-            Show("Inicio");
-        }
-        private RectTransform Box(string name,Transform parent,float x,float y,float x2,float y2,Color color){
-            var go=new GameObject(ReadableName(name),typeof(RectTransform),typeof(Image));go.transform.SetParent(parent,false);
-            Place(go,x,y,x2,y2);go.GetComponent<Image>().color=color;return go.GetComponent<RectTransform>();
-        }
-        private static void Place(GameObject go,float x,float y,float x2,float y2){var r=go.GetComponent<RectTransform>();r.anchorMin=new Vector2(x,y);r.anchorMax=new Vector2(x2,y2);r.offsetMin=Vector2.zero;r.offsetMax=Vector2.zero;}
-        private Text Label(Transform parent,string text,float x,float y,float x2,float y2,int size,Color color,TextAnchor align=TextAnchor.UpperLeft){
-            var go=new GameObject("Texto",typeof(RectTransform),typeof(Text));go.transform.SetParent(parent,false);Place(go,x,y,x2,y2);
-            var t=go.GetComponent<Text>();t.font=font;t.text=text;t.color=color;t.fontSize=size;t.alignment=align;t.raycastTarget=false;t.horizontalOverflow=HorizontalWrapMode.Wrap;t.verticalOverflow=VerticalWrapMode.Truncate;return t;
-        }
-        private void Clear(){foreach(Transform t in content){t.gameObject.SetActive(false);Destroy(t.gameObject);}controls.Clear();status.text="";}
-        private Button Button(string text,float x,float y,float width,UnityEngine.Events.UnityAction action,bool active=true){
-            var r=Box(text,content,x,y,x+width,y+.135f,new Color(.08f,.16f,.21f));
-            var button=r.gameObject.AddComponent<Button>();button.targetGraphic=r.GetComponent<Image>();button.interactable=active;
-            var c=button.colors;c.normalColor=Color.white;c.highlightedColor=new Color(.38f,.86f,.92f);c.selectedColor=c.highlightedColor;c.pressedColor=new Color(.2f,.6f,.7f);c.disabledColor=new Color(.32f,.36f,.4f);button.colors=c;
-            Label(r,text,.05f,0,.95f,1,21,White,TextAnchor.MiddleLeft);
-            button.onClick.AddListener(()=>{if(!loading){if(audioUI && click)audioUI.PlayOneShot(click);action();}});controls.Add(r.gameObject);return button;
-        }
-        private void Navigate(string next){history.Push(page);Show(next);}
-        private void Back(){if(history.Count>0)Show(history.Pop());else Show("Inicio");}
-        private void TextPage(string heading,string text){Label(content,heading,0,.84f,1,1,27,Cyan);Label(content,text,0,.24f,1,.80f,23,White);Button("← VOLVER",0,.02f,.44f,Back);}
-        private void Show(string next){
-            page=next;Clear();
-            switch(page){
-                case "Inicio":
-                    history.Clear();hayGuardado=GameManager.Instance.HayPartidaGuardada();
-                    Button("NUEVA PARTIDA",0,.80f,.48f,()=>{confirmNew=hayGuardado;Navigate(confirmNew?"Confirmar":"Introducción");});
-                    Button("CONTINUAR",.52f,.80f,.48f,Continue,hayGuardado);
-                    Button("INTRODUCCIÓN",0,.60f,.48f,()=>{confirmNew=false;Navigate("Introducción");});
-                    Button("MECÁNICAS Y CONTROLES",.52f,.60f,.48f,()=>Navigate("Controles"));
-                    Button("AJUSTES",0,.40f,.48f,()=>Navigate("Ajustes"));
-                    Button("CRÉDITOS",.52f,.40f,.48f,()=>Navigate("Créditos"));
-                    Button("SALIR",0,.20f,.48f,()=>Navigate("Salir"));
-                    Label(content,hayGuardado?"Partida guardada disponible":"Sin checkpoint guardado",0,0,1,.12f,18,new Color(.5f,.68f,.76f));break;
-                case "Introducción":
-                    TextPage("EL PROTOCOLO SIGUE ACTIVO","Despiertas en un laboratorio aislado. El sistema central ha bloqueado los accesos y los agentes de seguridad siguen patrullando.\n\nRecupera credenciales, restablece los sistemas y utiliza lo aprendido en cada zona para avanzar. Evita a los agentes: perder toda la vida significa volver al checkpoint.");
-                    Button("COMENZAR EN RECEPCIÓN →",.48f,.02f,.52f,StartNew);break;
-                case "Controles":
-                    TextPage("EXPLORA · INTERACTÚA · SOBREVIVE","WASD  ·  Desplazamiento     SHIFT  ·  Correr\nRATÓN  ·  Mirar sin mantener clic derecho\nE  ·  Interactuar     CLIC  ·  Paneles de Control\nESC  ·  Pausa / continuar     CTRL  ·  Agacharse\n\nAcércate a paneles y puertas. Resuelve sus requisitos, rompe la línea de visión del guardia y conserva tu vida. En el menú: flechas / Tab y Enter.");break;
-                case "Créditos":
-                    TextPage("PROYECTO ACADÉMICO / COMPUTACIÓN GRÁFICA","Laboratorio Abandonado · ProyectoFinal_20262CG\n\nMenú de respaldo y Zona 03: Farid Stiven Prado Hoyos.\nEscenas restantes: equipo del proyecto.\n\nMenú principal: Valeria. Recepción, jugador y guardado: Heymer. Los recursos conservan sus archivos y créditos originales.\nImplementación integrada para Unity 6 / PC.");break;
-                case "Confirmar":
-                    TextPage("NUEVA PARTIDA","Se reiniciarán la vida, el inventario y los objetivos de la sesión. El checkpoint de la partida se sustituirá al guardar de nuevo.\n\n¿Comenzar desde Recepción?");
-                    Button("SÍ, COMENZAR",.48f,.02f,.52f,()=>{confirmNew=false;Show("Introducción");});break;
-                case "Salir":
-                    TextPage("SALIR DEL LABORATORIO","¿Quieres cerrar el juego? Solo se conservará el progreso guardado en el último checkpoint.");
-                    Button("SALIR",.48f,.02f,.52f,Quit);break;
-                case "Ajustes":BuildSettings();break;
+            if (nombre == "Ajustes")
+            {
+                volumen.SetValueWithoutNotify(PlayerPrefs.GetFloat("LA.Volume", .7f));
+                sensibilidad.SetValueWithoutNotify(PlayerPrefs.GetFloat("LA.Sensitivity", 1f));
+                etiquetaVolumen.text = "Volumen general  " + volumen.value.ToString("0.0");
+                etiquetaSensibilidad.text = "Sensibilidad del ratón  " + sensibilidad.value.ToString("0.0");
+                OpcionesDePantalla();
             }
-            if(EventSystem.current && controls.Count>0)EventSystem.current.SetSelectedGameObject(controls[0]);
+            if (EventSystem.current && controles.Length > 0)
+                EventSystem.current.SetSelectedGameObject(controles[0].gameObject);
         }
-        private void BuildSettings(){
-            Label(content,"AJUSTES",0,.87f,1,1,27,Cyan);
-            Slider("Volumen general",.61f,0,1,PlayerPrefs.GetFloat("LA.Volume",.7f),value=>{AudioListener.volume=value;PlayerPrefs.SetFloat("LA.Volume",value);});
-            Slider("Sensibilidad del ratón",.35f,.3f,3,PlayerPrefs.GetFloat("LA.Sensitivity",1),value=>PlayerPrefs.SetFloat("LA.Sensitivity",value));
-            Button("INVERTIR Y: "+(PlayerPrefs.GetInt("LA.InvertY",0)==1?"SÍ":"NO"),0,.17f,.48f,()=>{PlayerPrefs.SetInt("LA.InvertY",1-PlayerPrefs.GetInt("LA.InvertY",0));Show("Ajustes");});
-            Button("PANTALLA: "+(Screen.fullScreen?"COMPLETA":"VENTANA"),.52f,.17f,.48f,()=>{Screen.fullScreen=!Screen.fullScreen;status.text="Cambio de pantalla solicitado (en ejecutable PC).";});
-            Button("← GUARDAR Y VOLVER",0,0,.64f,()=>{PlayerPrefs.Save();Back();});
+
+        public void Abrir(string nombre)
+        {
+            if (cargando) return;
+            Sonido();
+            historial.Push(pagina);
+            Mostrar(nombre);
         }
-        private void Slider(string title,float y,float min,float max,float value,UnityEngine.Events.UnityAction<float> change){
-            var label=Label(content,title+"  "+value.ToString("0.0"),0,y+.11f,1,y+.24f,21,White);
-            var r=Box(title,content,.01f,y,.99f,y+.08f,new Color(.13f,.24f,.29f));
-            var fillArea=Box("Área de relleno",r,.02f,.25f,.98f,.75f,new Color(0,0,0,0));var fill=Box("Relleno",fillArea,0,0,1,1,Cyan);
-            var handleArea=new GameObject("Área del control",typeof(RectTransform));handleArea.transform.SetParent(r,false);Place(handleArea,.02f,0,.98f,1);
-            var handle=Box("Control deslizante",handleArea.transform,0,0,0,1,White);handle.sizeDelta=new Vector2(16,0);
-            var slider=r.gameObject.AddComponent<Slider>();slider.fillRect=fill;slider.handleRect=handle;slider.targetGraphic=handle.GetComponent<Image>();slider.minValue=min;slider.maxValue=max;slider.SetValueWithoutNotify(value);
-            slider.onValueChanged.AddListener(v=>{label.text=title+"  "+v.ToString("0.0");change(v);});controls.Add(r.gameObject);
+
+        public void Volver()
+        {
+            Sonido();
+            Mostrar(historial.Count > 0 ? historial.Pop() : "Inicio");
         }
-        private void StartNew(){
-            loading=true;
+
+        public void Nueva() => Abrir(GameManager.Instance.HayPartidaGuardada() ? "Confirmar" : "Introducción");
+        public void Confirmar() { Sonido(); Mostrar("Introducción"); }
+        public void Comenzar()
+        {
+            if (cargando) return;
+            cargando = true;
+            Sonido();
             GameManager.Instance.NuevaPartida();
         }
-        private void Continue(){
-            loading=true;
+        public void Continuar()
+        {
+            if (cargando) return;
+            cargando = true;
+            Sonido();
             GameManager.Instance.ContinuarPartida();
         }
-        private void Quit(){PlayerPrefs.Save();
+        public void CambiarVolumen(float valor)
+        {
+            AudioListener.volume = valor;
+            PlayerPrefs.SetFloat("LA.Volume", valor);
+            etiquetaVolumen.text = "Volumen general  " + valor.ToString("0.0");
+        }
+        public void CambiarSensibilidad(float valor)
+        {
+            PlayerPrefs.SetFloat("LA.Sensitivity", valor);
+            etiquetaSensibilidad.text = "Sensibilidad del ratón  " + valor.ToString("0.0");
+        }
+        private void OpcionesDePantalla()
+        {
+            etiquetaInvertir.text = PlayerPrefs.GetInt("LA.InvertY", 0) == 1 ? "INVERTIR Y: SÍ" : "INVERTIR Y: NO";
+            etiquetaPantalla.text = Screen.fullScreen ? "PANTALLA: COMPLETA" : "PANTALLA: VENTANA";
+        }
+        public void Invertir()
+        {
+            Sonido();
+            PlayerPrefs.SetInt("LA.InvertY", 1 - PlayerPrefs.GetInt("LA.InvertY", 0));
+            OpcionesDePantalla();
+        }
+        public void Pantalla()
+        {
+            Sonido();
+            bool completa = !Screen.fullScreen;
+            Screen.fullScreen = completa;
+            etiquetaPantalla.text = completa ? "PANTALLA: COMPLETA" : "PANTALLA: VENTANA";
+            estado.text = "Cambio de pantalla solicitado (en ejecutable PC).";
+        }
+        public void GuardarOpciones() { PlayerPrefs.Save(); Volver(); }
+        public void Salir()
+        {
+            Sonido();
+            PlayerPrefs.Save();
 #if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying=false;
+            UnityEditor.EditorApplication.isPlaying = false;
 #else
             Application.Quit();
 #endif
         }
-        private void Update(){
-            if(loading || !content)return;
-#if ENABLE_INPUT_SYSTEM
-            bool back=Keyboard.current!=null && Keyboard.current.escapeKey.wasPressedThisFrame;
-            bool tab=Keyboard.current!=null && Keyboard.current.tabKey.wasPressedThisFrame;
-#else
-            bool back=Input.GetKeyDown(KeyCode.Escape);
-            bool tab=Input.GetKeyDown(KeyCode.Tab);
-#endif
-            if(tab && EventSystem.current && controls.Count>0){
-                int index=controls.IndexOf(EventSystem.current.currentSelectedGameObject);
-                for(int count=0;count<controls.Count;count++){index=(index+1)%controls.Count;var selectable=controls[index].GetComponent<Selectable>();if(selectable && selectable.IsInteractable()){EventSystem.current.SetSelectedGameObject(controls[index]);break;}}
+
+        private void Update()
+        {
+            var teclado = Keyboard.current;
+            if (cargando || teclado == null || controles == null) return;
+            if (teclado.tabKey.wasPressedThisFrame && EventSystem.current)
+            {
+                var elegido = EventSystem.current.currentSelectedGameObject;
+                int indice = System.Array.FindIndex(controles, c => c.gameObject == elegido);
+                for (int i = 0; i < controles.Length; i++)
+                {
+                    indice = (indice + 1) % controles.Length;
+                    if (!controles[indice].IsInteractable()) continue;
+                    EventSystem.current.SetSelectedGameObject(controles[indice].gameObject);
+                    break;
+                }
             }
-            if(back){if(page=="Inicio")Navigate("Salir");else Back();}
+            if (teclado.escapeKey.wasPressedThisFrame)
+            {
+                if (pagina == "Inicio") Abrir("Salir");
+                else Volver();
+            }
         }
     }
 }

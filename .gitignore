@@ -122,3 +122,9 @@ InitTestScene*.unity*
 .vscode/
 /.vscode/
 /ProjectSettings/SceneTemplateSettings.json
+
+# Partida local de Unity
+/Assets/StreamingAssets/partida.json
+/Assets/StreamingAssets/partida.json.meta
+/Assets/StreamingAssets/partida.json.tmp
+/Assets/StreamingAssets/partida.json.tmp.meta
