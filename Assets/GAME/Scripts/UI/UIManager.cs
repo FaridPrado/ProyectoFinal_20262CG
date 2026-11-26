@@ -28,19 +28,28 @@ public sealed class UIManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI textoAviso;
     [SerializeField] private TextMeshProUGUI textoObjetivo;
 
+    // Objetivo y aviso que manda el controlador de la escena (por ejemplo
+    // Zona01Controller o un Coleccionable). Si el HUD no tiene textos propios
+    // para ellos, se muestran en el HUD compartido (ver LateUpdate)
+    private string objetivoEscena;
+    private string avisoEscena;
+
     public void MostrarAviso(string mensaje)
     {
+        avisoEscena = mensaje;
         if (textoAviso != null) textoAviso.text = mensaje;
         if (panelAviso != null) panelAviso.SetActive(true);
     }
 
     public void OcultarAviso()
     {
+        avisoEscena = null;
         if (panelAviso != null) panelAviso.SetActive(false);
     }
 
     public void MostrarObjetivo(string objetivo)
     {
+        objetivoEscena = objetivo;
         if (textoObjetivo != null) textoObjetivo.text = objetivo;
     }
 
@@ -76,7 +85,7 @@ public sealed class UIManager : MonoBehaviour
         zone = FindFirstObjectByType<Z03ZoneGameplay>();
         hud = GetComponent<Z03HudPresenter>();
         if (eventos != null) eventos.SetActive(false);
-        mira.SetActive(zone != null);
+        if (mira != null) mira.SetActive(zone != null);
         if (GameManager.Instance) lastHealth = GameManager.Instance.vidaActual;
     }
 
@@ -233,8 +242,17 @@ public sealed class UIManager : MonoBehaviour
         else if (!zone)
         {
             bool laboratorio = escena == "02_Laboratorio";
-            hud.SetObjective(laboratorio ? "Recoge la credencial de laboratorio" : "Encuentra el botón de salida de Recepción");
-            hud.SetHelp(laboratorio ? "Pulsa E junto al lector para recoger la credencial y entrar en Control" : "Pulsa E junto al botón de salida para entrar al Laboratorio · ESC pausa");
+
+            // Si el controlador de la escena mando su propio objetivo o aviso, se usa ese
+            if (objetivoEscena != null)
+                hud.SetObjective(objetivoEscena);
+            else
+                hud.SetObjective(laboratorio ? "Recoge la credencial de laboratorio" : "Encuentra el botón de salida de Recepción");
+
+            if (avisoEscena != null)
+                hud.SetHelp(avisoEscena);
+            else
+                hud.SetHelp(laboratorio ? "Pulsa E junto al lector para recoger la credencial y entrar en Control" : "Pulsa E junto al botón de salida para entrar al Laboratorio · ESC pausa");
         }
 
         if (!zone)

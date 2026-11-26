@@ -22,6 +22,7 @@ public static class MontarZombiRecepcion
     private const string RUTA_SONIDOS_KIT = "Assets/SciFi Warehouse Kit/Demo/Audio/SFX/";
     private const string RUTA_SONIDOS_Z03 = "Assets/GAME/Zona03/Audio/";
     private const string RUTA_MATERIAL_PUERTA = "Assets/GAME/Materials/PuertaSalida.mat";
+    private const string RUTA_HUD = "Assets/GAME/Zona03/Prefabs/Z03_HUD_Completo.prefab";
 
     // Recorrido del zombi (la sala va de 0 a 24 en X y de 0 a 30 en Z):
     // vestibulo, archivo (lado oeste), cerca de la salida y bodega (lado este)
@@ -210,6 +211,51 @@ public static class MontarZombiRecepcion
         controlador.zombi = zombi;
         controlador.sonidoPuerta = AssetDatabase.LoadAssetAtPath<AudioClip>(RUTA_SONIDOS_KIT + "pressure_release_02.wav");
         EditorUtility.SetDirty(controlador);
+    }
+
+    // ---------- HUD compartido ----------
+    // La rubrica pide un unico Canvas prefab en todas las escenas.
+    // Quita el CanvasJuego viejo de Recepcion y pone el HUD que usan las demas
+    // escenas (Z03_HUD_Completo): vida, mensajes, pausa, inventario y derrota.
+    [MenuItem("Proyecto Final/Usar HUD compartido en Recepcion")]
+    private static void UsarHudCompartido()
+    {
+        var escena = EditorSceneManager.GetActiveScene();
+        if (escena.name != "01_Recepcion")
+        {
+            EditorUtility.DisplayDialog("HUD compartido", "Abre primero la escena 01_Recepcion.", "Ok");
+            return;
+        }
+
+        bool yaTieneHud = false;
+        foreach (UIManager ui in Object.FindObjectsByType<UIManager>(FindObjectsSortMode.None))
+        {
+            if (ui.GetComponent<Z03HudPresenter>() != null)
+            {
+                yaTieneHud = true;
+            }
+            else
+            {
+                // Es el CanvasJuego viejo: se borra
+                Undo.DestroyObjectImmediate(ui.gameObject);
+            }
+        }
+
+        if (!yaTieneHud)
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(RUTA_HUD);
+            if (prefab == null)
+            {
+                Debug.LogError("No se encontro el HUD en " + RUTA_HUD);
+                return;
+            }
+
+            var hud = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            Undo.RegisterCreatedObjectUndo(hud, "HUD compartido");
+        }
+
+        EditorSceneManager.MarkSceneDirty(escena);
+        Debug.Log("Recepcion usa ahora el HUD compartido. Guarda la escena (Ctrl/Cmd + S).");
     }
 
     private static void Borrar(string nombre)
