@@ -2,28 +2,42 @@ using UnityEngine;
 
 namespace ControlRoomZ03
 {
-    public enum Z03Action { Vigilancia=0, Energia=1, Terminal=2, Salida=3 }
+    public enum Z03Action { Vigilancia = 0, Energia = 1, Terminal = 2, Salida = 3, Registro = 4, Reserva = 5 }
+
     public sealed class Z03InteractionNode : MonoBehaviour
     {
-        [SerializeField] public Z03Action accion;
+        public Z03Action accion;
         [SerializeField] private AudioClip sonido;
+        [SerializeField] private Renderer piloto;
+        [SerializeField] private Material pilotoListo;
         private AudioSource audioNodo;
+        private Z03ZoneGameplay zona;
+
         private void Awake()
         {
-            if (sonido != null)
-            {
-                audioNodo=GetComponent<AudioSource>();
-                if(audioNodo==null) audioNodo=gameObject.AddComponent<AudioSource>();
-                audioNodo.playOnAwake=false; audioNodo.spatialBlend=.85f;
-                audioNodo.minDistance=1.3f; audioNodo.maxDistance=14f;
-            }
+            if (!sonido) return;
+            audioNodo = GetComponent<AudioSource>();
+            if (!audioNodo) audioNodo = gameObject.AddComponent<AudioSource>();
+            audioNodo.playOnAwake = false;
+            audioNodo.spatialBlend = .85f;
+            audioNodo.minDistance = 1.3f;
+            audioNodo.maxDistance = 14f;
         }
+
+        private void Start()
+        {
+            zona = FindFirstObjectByType<Z03ZoneGameplay>();
+            ActualizarPiloto();
+        }
+
         public string Etiqueta
         {
             get
             {
-                switch(accion)
+                switch (accion)
                 {
+                    case Z03Action.Registro: return "Recuperar registro de incidentes";
+                    case Z03Action.Reserva: return "Conectar alimentación de reserva";
                     case Z03Action.Vigilancia: return "Restablecer vigilancia";
                     case Z03Action.Energia: return "Restablecer energía";
                     case Z03Action.Terminal: return "Autorizar terminal central";
@@ -31,12 +45,27 @@ namespace ControlRoomZ03
                 }
             }
         }
+
         public void Activar()
         {
-            if(accion==Z03Action.Terminal){var ui=FindFirstObjectByType<UIManager>();if(ui){ui.OpenTerminal();if(audioNodo && sonido)audioNodo.PlayOneShot(sonido);return;}}
-            if(audioNodo && sonido) audioNodo.PlayOneShot(sonido);
-            var control=FindFirstObjectByType<Z03ZoneGameplay>();
-            if(control) control.Interactuar(accion);
+            if (audioNodo) audioNodo.PlayOneShot(sonido);
+            if (accion == Z03Action.Terminal)
+            {
+                var ui = FindFirstObjectByType<UIManager>();
+                if (ui)
+                {
+                    ui.OpenTerminal();
+                    return;
+                }
+            }
+            if (zona) zona.Interactuar(accion);
+            ActualizarPiloto();
+        }
+
+        private void ActualizarPiloto()
+        {
+            if (piloto && pilotoListo && Z03ZoneGameplay.EstacionPreparada(accion))
+                piloto.sharedMaterial = pilotoListo;
         }
     }
 }
