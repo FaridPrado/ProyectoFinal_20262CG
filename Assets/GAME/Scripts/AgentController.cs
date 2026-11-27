@@ -52,9 +52,24 @@ public class AgentController : MonoBehaviour
     public AudioClip sonidoRetorno;
     public Z03CharacterAnimation animacion;
 
+    [Header("Animator directo (opcional, si no se usa Z03CharacterAnimation)")]
+    // Parametros esperados: Speed (float), VelAnim (float) y attack (trigger)
+    public Animator animador;
+    public float velocidadClipCaminar = 1f;   // metros por segundo que avanza el clip de caminar a velocidad 1
+
+    [Header("Oido (ruido que hace el jugador)")]
+    // Radio en que lo escucha = NivelRuido x este valor (caminar 1, correr 2, agachado 0)
+    public float radioRuidoPorNivel = 0f;     // 0 = desactivado
+
+    private static readonly int ParamSpeed = Animator.StringToHash("Speed");
+    private static readonly int ParamVelAnim = Animator.StringToHash("VelAnim");
+    private static readonly int ParamAttack = Animator.StringToHash("attack");
+    private static readonly int ParamRugir = Animator.StringToHash("rugir");
+
     private NavMeshAgent agente;
     private Transform jugador;
     private PlayerHealth saludJugador;
+    private PlayerController controlJugador;
     private int puntoActual;
     private Vector3 ultimaPosicionVista;
     private float tiempoEnEstado;
@@ -69,6 +84,7 @@ public class AgentController : MonoBehaviour
         if (saludJugador != null)
         {
             jugador = saludJugador.transform;
+            controlJugador = saludJugador.GetComponent<PlayerController>();
         }
 
         if (!agente.isOnNavMesh)
@@ -83,7 +99,8 @@ public class AgentController : MonoBehaviour
 
     private void Update()
     {
-        if (jugador == null)
+        // Si el agente murio (su NavMeshAgent se apaga) ya no piensa
+        if (jugador == null || !agente.enabled || !agente.isOnNavMesh)
         {
             return;
         }
@@ -109,6 +126,12 @@ public class AgentController : MonoBehaviour
         else
         {
             tiempoSinVer += Time.deltaTime;
+
+            // Oido: si no lo ve pero hace ruido cerca, va a investigar de donde vino
+            if ((estado == EstadoAgente.Patrulla || estado == EstadoAgente.Retorno) && EscuchaJugador(distancia))
+            {
+                Investigar(jugador.position);
+            }
         }
 
         switch (estado)
@@ -244,6 +267,12 @@ public class AgentController : MonoBehaviour
             luzEstado.color = color;
         }
 
+        // Reaccion visible con el Animator directo: ruge al detectar algo
+        if (nuevo == EstadoAgente.Alerta && animador != null)
+        {
+            animador.SetTrigger(ParamRugir);
+        }
+
         // Reaccion audible
         if (fuenteAudio != null && sonido != null)
         {
@@ -287,6 +316,10 @@ public class AgentController : MonoBehaviour
         {
             animacion.Attack();
         }
+        else if (animador != null)
+        {
+            animador.SetTrigger(ParamAttack);
+        }
 
         if (fuenteAudio != null && sonidoAtaque != null)
         {
@@ -328,6 +361,17 @@ public class AgentController : MonoBehaviour
         return true;
     }
 
+    // Oido: correr se escucha mas lejos que caminar; agachado o quieto no hace ruido
+    private bool EscuchaJugador(float distancia)
+    {
+        if (controlJugador == null || radioRuidoPorNivel <= 0f)
+        {
+            return false;
+        }
+
+        return controlJugador.NivelRuido > 0f && distancia <= controlJugador.NivelRuido * radioRuidoPorNivel;
+    }
+
     private void IrA(Vector3 destino, float velocidad)
     {
         agente.isStopped = false;
@@ -354,18 +398,17 @@ public class AgentController : MonoBehaviour
 
     private void ActualizarAnimacion()
     {
-        if (animacion == null)
-        {
-            return;
-        }
+        float velocidad = agente.isStopped ? 0f : agente.velocity.magnitude;
 
-        if (agente.isStopped)
+        if (animacion != null)
         {
-            animacion.SetSpeed(0f);
+            animacion.SetSpeed(velocidad);
         }
-        else
+        else if (animador != null)
         {
-            animacion.SetSpeed(agente.velocity.magnitude);
+            // VelAnim acelera el clip de caminar para que los pies sigan al NavMeshAgent
+            animador.SetFloat(ParamSpeed, velocidad);
+            animador.SetFloat(ParamVelAnim, velocidad / Mathf.Max(0.1f, velocidadClipCaminar));
         }
     }
 

@@ -20,9 +20,20 @@ public class ArmaRecogible : MonoBehaviour
     private bool recogida;
     private bool jugadorCerca;
     private float proximoDisparo;
+    private InteractionController interaccion;
+
+    private void Start()
+    {
+        interaccion = FindFirstObjectByType<InteractionController>();
+    }
 
     private void Update()
     {
+        // En pausa, en la terminal o muerto no se recoge ni se dispara
+        GameManager gm = GameManager.Instance;
+        if (gm != null && (gm.enPausa || gm.jugadorMuerto))
+            return;
+
         if (!recogida)
         {
             transform.Rotate(0f, velocidadGiro * Time.deltaTime, 0f, Space.World);
@@ -30,11 +41,22 @@ public class ArmaRecogible : MonoBehaviour
             if (jugadorCerca && Keyboard.current.eKey.wasPressedThisFrame)
                 Recoger();
         }
-        else if (Keyboard.current.pKey.isPressed && Time.time >= proximoDisparo)
+        else if (QuiereDisparar() && Time.time >= proximoDisparo)
         {
             proximoDisparo = Time.time + cadencia;
             Disparar();
         }
+    }
+
+    // P o clic izquierdo. El clic no dispara si la mira apunta a un objeto
+    // interactivo (en ese caso el clic es para el InteractionController)
+    private bool QuiereDisparar()
+    {
+        if (Keyboard.current != null && Keyboard.current.pKey.isPressed)
+            return true;
+
+        bool clic = Mouse.current != null && Mouse.current.leftButton.isPressed;
+        return clic && (interaccion == null || !interaccion.TieneObjetivo);
     }
 
     [Header("Posición al recogerla")]

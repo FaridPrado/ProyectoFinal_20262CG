@@ -48,6 +48,11 @@ public class GameManager : MonoBehaviour
     // El tope es siempre el ultimo acceso; deshacer saca justo ese (LIFO)
     private Stack<string> historialAccesos = new Stack<string>();
 
+    // Queue: tareas de reinicio de la sala de servidores (Zona 4), en el orden
+    // obligatorio. El rack correcto es siempre el del frente (Peek) y al
+    // reiniciarlo sale de la cola con Dequeue (FIFO)
+    private Queue<string> tareasPendientes = new Queue<string>();
+
     // true cuando la escena se carga desde el JSON (continuar o morir),
     // para no sobrescribir el punto de control que se acaba de leer
     private bool cargandoDesdeGuardado;
@@ -188,6 +193,13 @@ public class GameManager : MonoBehaviour
     // los controladores (por ejemplo, una terminal de guardado)
     public void GuardarPartida(string nombrePunto)
     {
+        // Nunca se guarda un punto de control con el jugador muerto (por ejemplo,
+        // si un enemigo muere en el mismo instante): se recargaria con vida 0
+        if (jugadorMuerto || vidaActual <= 0)
+        {
+            return;
+        }
+
         DatosPartida datos = new DatosPartida();
         datos.personajeSeleccionado = personajeSeleccionado;
         datos.escenaActual = escenaActual;
@@ -199,6 +211,7 @@ public class GameManager : MonoBehaviour
         datos.puertas = SaveManager.DiccionarioALista(puertas);
         datos.mensajesPendientes = SaveManager.ColaALista(mensajesSistema);
         datos.historialAccesos = SaveManager.PilaALista(historialAccesos);
+        datos.tareasPendientes = SaveManager.ColaALista(tareasPendientes);
         datos.tiempoJugado = tiempoJugado;
         datos.muertes = muertes;
 
@@ -225,6 +238,8 @@ public class GameManager : MonoBehaviour
         puertas = SaveManager.ReconstruirDiccionario(datos.puertas);
         mensajesSistema = SaveManager.ReconstruirCola(datos.mensajesPendientes);
         historialAccesos = SaveManager.ReconstruirPila(datos.historialAccesos);
+        // Un JSON viejo puede no traer este campo: en ese caso la cola queda vacia
+        tareasPendientes = SaveManager.ReconstruirCola(datos.tareasPendientes ?? new List<string>());
         tiempoJugado = datos.tiempoJugado;
         muertes = datos.muertes;
         gano = false;
@@ -458,5 +473,50 @@ public class GameManager : MonoBehaviour
     public int CantidadAccesos()
     {
         return historialAccesos.Count;
+    }
+
+    // ---------- Tareas de reinicio de la Zona 4 (Queue) ----------
+
+    // Se llena una sola vez (al entrar por primera vez a la sala). Si la cola
+    // ya trae tareas desde el JSON no se toca, para no perder el progreso
+    public void IniciarTareas(IList<string> enOrden)
+    {
+        if (tareasPendientes.Count > 0)
+        {
+            return;
+        }
+
+        foreach (string tarea in enOrden)
+        {
+            tareasPendientes.Enqueue(tarea);
+        }
+    }
+
+    public int CantidadTareas()
+    {
+        return tareasPendientes.Count;
+    }
+
+    // Consulta cual es la siguiente tarea sin sacarla de la cola
+    public string SiguienteTarea()
+    {
+        if (tareasPendientes.Count == 0)
+        {
+            return "";
+        }
+
+        return tareasPendientes.Peek();
+    }
+
+    // La tarea del frente se cumplio: sale de la cola. Este Dequeue tiene
+    // efecto visible (el rack se enciende en verde y avanza el objetivo)
+    public string CompletarTarea()
+    {
+        if (tareasPendientes.Count == 0)
+        {
+            return "";
+        }
+
+        return tareasPendientes.Dequeue();
     }
 }

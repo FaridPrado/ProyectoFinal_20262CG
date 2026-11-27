@@ -15,9 +15,20 @@ public class Zombie : MonoBehaviour, IDamageable
 
     [Header("Persecución")]
     [SerializeField] private float detectionRange = 15f;
-    [SerializeField] private Transform target; 
+    [SerializeField] private Transform target;
 
-    
+    [Header("IA")]
+    // Apagado cuando el zombi lleva un AgentController: este script solo maneja la vida
+    // (IDamageable, para el arma) y la muerte; la IA de estados la hace el AgentController
+    [SerializeField] private bool moverConIAPropia = true;
+
+    [Header("Reaccion al recibir dano (opcional)")]
+    [SerializeField] private AudioSource fuenteAudio;
+    [SerializeField] private AudioClip sonidoDanio;
+    [SerializeField] private AudioClip sonidoMuerte;
+    [SerializeField] private bool animarGolpe;     // trigger "hit" (solo si el Animator lo tiene)
+
+
     public event Action<float, float> OnHealthChanged; 
     public event Action OnDied;
 
@@ -47,7 +58,7 @@ public class Zombie : MonoBehaviour, IDamageable
 
     private void Update()
     {
-        if (IsDead || target == null) return;
+        if (IsDead || !moverConIAPropia || target == null) return;
 
         if (!agent.isOnNavMesh) return;
 
@@ -103,13 +114,21 @@ public class Zombie : MonoBehaviour, IDamageable
         CurrentHealth = Mathf.Max(CurrentHealth - amount, 0f);
         OnHealthChanged?.Invoke(CurrentHealth, maxHealth);
 
-        if (CurrentHealth <= 0f) Die();
+        if (CurrentHealth <= 0f)
+        {
+            Die();
+            return;
+        }
+
+        if (animarGolpe && animator != null) animator.SetTrigger("hit");
+        if (fuenteAudio != null && sonidoDanio != null) fuenteAudio.PlayOneShot(sonidoDanio);
     }
 
     private void Die()
     {
         IsDead = true;
         animator.SetTrigger("die");
+        if (fuenteAudio != null && sonidoMuerte != null) fuenteAudio.PlayOneShot(sonidoMuerte);
         agent.enabled = false;
         OnDied?.Invoke();
 

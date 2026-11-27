@@ -35,6 +35,10 @@ public class DatosPartida
     // el ULTIMO de la lista es el tope de la pila
     public List<string> historialAccesos = new List<string>();
 
+    // Contenido de la Queue de tareas de reinicio de la Zona 4, en orden:
+    // el primero de la lista es el siguiente rack que hay que reiniciar
+    public List<string> tareasPendientes = new List<string>();
+
     // Estadisticas de la partida
     public float tiempoJugado;
     public int muertes;
