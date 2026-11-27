@@ -1,0 +1,32 @@
+name: Integrar PR del equipo
+
+on:
+  pull_request_target:
+    branches: [main]
+    types: [opened, reopened, synchronize, ready_for_review]
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  integrar:
+    if: >-
+      !github.event.pull_request.draft &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      contains(fromJSON('["COLLABORATOR","MEMBER","OWNER"]'), github.event.pull_request.author_association)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fusionar la revisión actual
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -eu
+          actual=$(gh api "repos/$REPO/pulls/$PR" --jq '[.state, .draft, .base.ref, .head.sha] | @tsv')
+          esperado=$(printf 'open\tfalse\tmain\t%s' "$SHA")
+          if [ "$actual" = "$esperado" ]; then
+            gh api --method PUT "repos/$REPO/pulls/$PR/merge" -f sha="$SHA" -f merge_method=merge
+          fi
