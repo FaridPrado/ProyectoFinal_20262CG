@@ -1,20 +1,24 @@
 using UnityEngine;
 
-public class PlayerHealth : MonoBehaviour
+// Unico punto de entrada del dano al jugador: lo usan el AgentController,
+// el Zombie (via IDamageable) y las zonas de DanoPorContacto. Asi todo dano
+// pasa por GameManager.RecibirDanio (derrota al llegar a 0) y tiene
+// retroalimentacion (sonido + sacudida de camara).
+public class PlayerHealth : MonoBehaviour, IDamageable
 {
     [Header("Retroalimentacion de danio")]
     public AudioSource fuenteAudio;
     public AudioClip sonidoDanio;
     public float duracionSacudida = 0.25f;
     public float intensidadSacudida = 0.08f;
-  
+
 
     private PlayerController jugador;
 
     private void Awake()
     {
         jugador = GetComponent<PlayerController>();
-        
+
     }
 
     // El AgentController la llama una vez por ataque, respetando su cooldown
@@ -39,6 +43,12 @@ public class PlayerHealth : MonoBehaviour
         }
 
         Debug.Log("Vida actual: " + GameManager.Instance.vidaActual);
+    }
+
+    // IDamageable: el Zombie ataca con TakeDamage(float); se redirige al mismo flujo
+    public void TakeDamage(float amount)
+    {
+        RecibirDanio(Mathf.RoundToInt(amount));
     }
 
     public void Curar(int cantidad)

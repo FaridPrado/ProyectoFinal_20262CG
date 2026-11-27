@@ -67,6 +67,8 @@ public sealed class UIManager : MonoBehaviour
     private bool mostrandoDerrota;
     private readonly Stack<string> pages = new Stack<string>();
     private Z03ZoneGameplay zone;
+    private Zona04Controller zona04;
+    private InteractionController interaccion;
     private Z03HudPresenter hud;
     private string escena;
     private bool terminalOpen;
@@ -83,8 +85,11 @@ public sealed class UIManager : MonoBehaviour
         }
 
         zone = FindFirstObjectByType<Z03ZoneGameplay>();
+        zona04 = FindFirstObjectByType<Zona04Controller>();
+        interaccion = FindFirstObjectByType<InteractionController>();
         hud = GetComponent<Z03HudPresenter>();
         if (eventos != null) eventos.SetActive(false);
+        mira.SetActive(zone != null || zona04 != null);
         if (mira != null) mira.SetActive(zone != null);
         if (GameManager.Instance) lastHealth = GameManager.Instance.vidaActual;
     }
@@ -124,6 +129,11 @@ public sealed class UIManager : MonoBehaviour
     {
         Clear();
         panel.SetActive(true);
+        if (zona04 != null)
+        {
+            RenderTerminalZona04();
+            return;
+        }
         title.text = "TERMINAL / " + pages.Peek();
         if (pages.Peek() == "Inicio")
         {
@@ -153,6 +163,82 @@ public sealed class UIManager : MonoBehaviour
             });
             Opcion("Cerrar", 1, Close);
         }
+    }
+
+    // Terminal de la Zona 4 (sala de servidores). Es un panel del mismo Canvas
+    // prefab; el contenido lo da el Zona04Controller. La navegacion usa la
+    // pila de paginas: entrar = Push, Atras = Pop (vuelve a la pagina anterior)
+    void RenderTerminalZona04()
+    {
+        string pagina = pages.Peek();
+        title.text = "TERMINAL SERVIDORES / " + pagina.ToUpperInvariant();
+        body.text = zona04.TextoTerminal(pagina);
+
+        if (pagina == Zona04Controller.PAGINA_INICIO)
+        {
+            Opcion("Orden de reinicio", 0, () =>
+            {
+                pages.Push(Zona04Controller.PAGINA_ORDEN);
+                RenderTerminal();
+            });
+            Opcion("Cámara del túnel", 1, () =>
+            {
+                pages.Push(Zona04Controller.PAGINA_CAMARA);
+                RenderTerminal();
+            });
+            // Boton de accion: el señuelo atrae a todos los agentes a la sala oeste
+            Opcion(zona04.SenueloDisponible ? "Activar señuelo acústico" : "Señuelo recargando (" + zona04.SegundosParaSenuelo + " s)", 2, () =>
+            {
+                zona04.ActivarSenuelo();
+                Close();
+            });
+            Opcion("Cerrar sesión", 3, () =>
+            {
+                zona04.CerrarSesion();
+                Close();
+            });
+        }
+        else
+        {
+            if (pagina == Zona04Controller.PAGINA_CAMARA && security != null)
+            {
+                feed.gameObject.SetActive(true);
+                security.enabled = true;
+            }
+
+            Opcion("Atrás", 0, () =>
+            {
+                if (pages.Count > 1)
+                    pages.Pop();
+                RenderTerminal();
+            });
+            Opcion("Salir", 1, Close);
+        }
+    }
+
+    // Zona 4: vida del jugador y, cuando el jefe entra en combate, su vida en %.
+    // El texto solo se rearma cuando cambia algun valor (sin basura por frame)
+    private int ultimaVidaMostrada = -1;
+    private int ultimoJefeMostrado = -2;
+    private string textoEstadoZona04;
+
+    void ActualizarEstadoZona04(GameManager gm)
+    {
+        JefeMutante jefe = zona04.Jefe;
+        int jefePct = jefe != null && jefe.MostrarEnHUD ? Mathf.CeilToInt(jefe.VidaNormalizada * 100f) : -1;
+        if (jefePct >= 0 && jefe.EnFuria)
+            jefePct += 1000;   // distinto valor para que se rearme al entrar en furia
+
+        if (gm.vidaActual != ultimaVidaMostrada || jefePct != ultimoJefeMostrado || textoEstadoZona04 == null)
+        {
+            ultimaVidaMostrada = gm.vidaActual;
+            ultimoJefeMostrado = jefePct;
+            textoEstadoZona04 = "VIDA " + gm.vidaActual + " / " + gm.vidaMaxima;
+            if (jefePct >= 0)
+                textoEstadoZona04 += "   ·   ESPÉCIMEN " + (jefePct % 1000) + "%" + (jefe.EnFuria ? " (FURIA)" : "");
+        }
+
+        hud.SetStatus(textoEstadoZona04);
     }
 
     void Pause()
@@ -231,13 +317,31 @@ public sealed class UIManager : MonoBehaviour
             {
                 Clear();
                 panel.SetActive(true);
-                title.text = "04 / SERVIDORES";
-                body.text = "Has llegado a la sala de servidores. Fin del recorrido disponible.";
+                if (zona04 != null)
+                {
+                    int minutos = (int)(gm.tiempoJugado / 60f);
+                    int segundos = (int)(gm.tiempoJugado % 60f);
+                    title.text = "EVACUACIÓN COMPLETADA";
+                    body.text = "Reiniciaste los servidores y escapaste por la compuerta del túnel norte.\n" +
+                                "Tiempo de partida: " + minutos + " min " + segundos.ToString("00") + " s   ·   Muertes: " + gm.muertes;
+                }
+                else
+                {
+                    title.text = "04 / SERVIDORES";
+                    body.text = "Has llegado a la sala de servidores. Fin del recorrido disponible.";
+                }
                 Opcion("Volver al menú principal", 0, gm.IrAlMenu);
             }
 
-            hud.SetObjective("Llegada a servidores");
+            hud.SetObjective(zona04 != null ? "Laboratorio evacuado" : "Llegada a servidores");
             hud.SetHelp("Recorrido completado");
+        }
+        else if (zona04 != null)
+        {
+            // Zona 4: el texto lo define su controlador de escena
+            hud.SetObjective(zona04.TextoObjetivo);
+            // Si la mira apunta a un objeto interactivo se muestra su accion
+            hud.SetHelp(interaccion != null && interaccion.TieneObjetivo ? interaccion.TextoActual : zona04.TextoAyuda);
         }
         else if (!zone)
         {
@@ -255,7 +359,9 @@ public sealed class UIManager : MonoBehaviour
                 hud.SetHelp(laboratorio ? "Pulsa E junto al lector para recoger la credencial y entrar en Control" : "Pulsa E junto al botón de salida para entrar al Laboratorio · ESC pausa");
         }
 
-        if (!zone)
+        if (zona04 != null)
+            ActualizarEstadoZona04(gm);
+        else if (!zone)
             hud.SetStatus("VIDA " + gm.vidaActual + " / " + gm.vidaMaxima);
         bool paused = gm.enPausa;
         if (paused && !wasPaused && !terminalOpen)
